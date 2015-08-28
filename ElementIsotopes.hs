@@ -9,7 +9,7 @@ Maintainer  : Michael Thomas <Michaelt293@gmail.com>
 Stability   : Experimental
 -}
 
-module ElementsIsotopes
+module ElementIsotopes
     (
       IsotopeMass
     , IsotopeAbundance

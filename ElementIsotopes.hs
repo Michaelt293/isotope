@@ -65,7 +65,7 @@ data ElementSymbol = H  | He | Li | Be | B  | C  | N  | O  | F  | Ne | Na | Mg |
                      In | Sn | Sb | Te | I  | Xe | Cs | Ba | La | Ce | Pr | Nd |
                      Pm | Sm | Eu | Gd | Tb | Dy | Ho | Er | Tm | Yb | Lu | Hf |
                      Ta | W  | Re | Os | Ir | Pt | Au | Hg | Tl | Pb | Bi | Th |
-                     Pa | U  deriving (Show, Eq, Ord)
+                     Pa | U  deriving (Show, Read, Eq, Ord, Enum, Bounded)
 
 
 elements = Map.fromList

@@ -3,7 +3,7 @@ Module      : ElementIsotopes
 Description : Data on isotopic masses and relative abundances obtained from-
 http://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl/
 (Accessed: 28/8/2015; uncertainities not provided). 
-Copyright   : Copyright 2015 IMBCR pty ltd. All rights reserved.
+Copyright   : Michael Thomas
 License     : GPL-3
 Maintainer  : Michael Thomas <Michaelt293@gmail.com>
 Stability   : Experimental

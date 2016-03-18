@@ -1,72 +1,34 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE DeriveFoldable #-}
+{-|
+Module      : ElementIsotopes
+Description : Isotopic masses and relative abundances for all elements from
+              Hydrogen to Bismuth and Thorium and Uranium. Data on isotopic
+              masses and relative abundances obtained from-
+              http://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl/
+              (Accessed: 28/8/2015; uncertainities not provided).
+Copyright   : Michael Thomas
+License     : GPL-3
+Maintainer  : Michael Thomas <Michaelt293@gmail.com>
+Stability   : Experimental
+-}
 module Isotope.Periodic
-    ( IsotopicMass
-    , IsotopicAbundance
-    , ElementName
-    , AtomicNumber
-    , ProtonNumber
-    , NeutronNumber
-    , Nucleons
-    , MassNumber
-    , IntegerMass
-    , MonoisotopicMass
-    , NominalMass
-    , AverageAtomicMass
-    , Isotope(..)
-    , Element(..)
-    , ElementSymbol(..)
+    ( elements
     , elementSymbolList
-    , ElementSymbolMap(..)
-    , mkElementSymbolMap
-    , elements
+    , lookupElement
+    , elementName
+    , atomicNumber
+    , isotopes
+    , mostAbundantIsotope
+    , selectIsotope
+    , integerMasses
+    , isotopicMasses
+    , isotopicAbundances
     ) where
 
-import Data.Map            (Map, fromList)
-
-type IsotopicMass      = Double
-type IsotopicAbundance = Double
-type ElementName       = String
-type AtomicNumber      = Int
-type ProtonNumber      = AtomicNumber
-type NeutronNumber     = Int
-type Nucleons          = (ProtonNumber, NeutronNumber)
-type MassNumber        = Int
-type IntegerMass       = Int
-type MonoisotopicMass  = Double
-type NominalMass       = Int
-type AverageAtomicMass = Double
-
-
-data Isotope = Isotope { nucleons          :: Nucleons
-                       , isotopicMass      :: IsotopicMass
-                       , isotopicAbundance :: IsotopicAbundance
-                       } deriving (Show, Eq, Ord)
-
-data Element = Element { atomicNumber' :: AtomicNumber
-                       , elementName'  :: ElementName
-                       , isotopes'     :: [Isotope]
-                       } deriving (Show, Eq, Ord)
-
-data ElementSymbol = H  | He | Li | Be | B  | C  | N  | O  | F  | Ne | Na | Mg |
-                     Al | Si | P  | S  | Cl | Ar | K  | Ca | Sc | Ti | V  | Cr |
-                     Mn | Fe | Co | Ni | Cu | Zn | Ga | Ge | As | Se | Br | Kr |
-                     Rb | Sr | Y  | Zr | Nb | Mo | Tc | Ru | Rh | Pd | Ag | Cd |
-                     In | Sn | Sb | Te | I  | Xe | Cs | Ba | La | Ce | Pr | Nd |
-                     Pm | Sm | Eu | Gd | Tb | Dy | Ho | Er | Tm | Yb | Lu | Hf |
-                     Ta | W  | Re | Os | Ir | Pt | Au | Hg | Tl | Pb | Bi | Th |
-                     Pa | U  deriving (Show, Read, Eq, Ord, Enum, Bounded)
-
-elementSymbolList :: [ElementSymbol]
-elementSymbolList = [H .. U]
-
-newtype ElementSymbolMap a = ElementSymbolMap
-                           {getSymbolMap :: Map ElementSymbol a}
-                           deriving (Show, Read, Eq, Ord, Functor, Traversable, Foldable)
-
-mkElementSymbolMap :: [(ElementSymbol, a)] -> ElementSymbolMap a
-mkElementSymbolMap = ElementSymbolMap . fromList
+import Prelude hiding      (lookup)
+import qualified Data.Map as Map
+import Data.List           (elemIndex)
+import Data.Maybe          (fromJust)
+import Isotope.Element
 
 elements :: ElementSymbolMap Element
 elements = mkElementSymbolMap
@@ -361,3 +323,50 @@ elements = mkElementSymbolMap
                                    , Isotope (92, 143)  235.0439301    0.007204
                                    , Isotope (92, 146)  238.0507884    0.992742 ])
   ]
+
+instance Mass ElementSymbol where
+    monoisotopicMass = monoisotopicMass . findElement
+    nominalMass = nominalMass . findElement
+    averageMass = averageMass . findElement
+
+-- |Searches elements (a map) with an ElementSymbol key and returns
+-- information on for the element.
+lookupElement :: ElementSymbol -> Maybe Element
+lookupElement = flip lookup elements
+
+findElement :: ElementSymbol -> Element
+findElement = (!) elements
+
+-- |Returns the name for an element symbol.
+elementName :: ElementSymbol -> ElementName
+elementName = elementName' . findElement
+
+-- |Returns the atomic number for an element.
+atomicNumber :: ElementSymbol -> AtomicNumber
+atomicNumber = atomicNumber' . findElement
+
+-- |Returns all the naturally-occurring isotopes for an element.
+isotopes :: ElementSymbol -> [Isotope]
+isotopes = isotopes' . findElement
+
+-- |Returns the most abundant naturally-occurring isotope for an element.
+mostAbundantIsotope :: ElementSymbol -> Isotope
+mostAbundantIsotope = elementMostAbundantIsotope . findElement
+
+-- |Selects an isotope of element based on the isotope's mass number (IntegerMass).
+selectIsotope :: ElementSymbol -> IntegerMass -> Isotope
+selectIsotope sym mass = isotopeList !! indexOfIsotope
+    where isotopeList = isotopes sym
+          indexOfIsotope = fromJust $ elemIndex mass (integerMasses sym)
+
+-- |Exact masses for all naturally-occurring isotopes for an element.
+isotopicMasses :: ElementSymbol -> [IsotopicMass]
+isotopicMasses = elementIsotopicMasses . findElement
+
+-- |Integer masses for all naturally-occurring isotopes for an element.
+integerMasses :: ElementSymbol -> [IntegerMass]
+integerMasses = elementIntegerMasses . findElement
+
+-- |Isotope abundances for all naturally-occurring isotopes for an element.
+isotopicAbundances :: ElementSymbol -> [IsotopicAbundance]
+isotopicAbundances = elementIsotopicAbundances . findElement

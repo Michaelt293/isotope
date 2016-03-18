@@ -1,23 +1,19 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Isotope.Molecule where
+module Isotope.Chemical where
 
 import Text.Megaparsec
 import Text.Megaparsec.String
 import qualified Text.Megaparsec.Lexer as L
 import Data.String
-import Control.Applicative
-import Isotope.ElementIsotopes
+import Isotope.Element
 import Isotope.Periodic
-import Data.Map hiding (map)
+import Data.Map hiding (map, (!))
 
-type MolecularFormula = ElementSymbolMap Int
+type ChemicalFormula = ElementSymbolMap Int
 
 elemSym :: Parser ElementSymbol
 elemSym = elemSym' <?> "element symbol"
@@ -28,7 +24,7 @@ elemSym = elemSym' <?> "element symbol"
                                 Nothing -> read [upper]
                                 Just lower' -> read [upper, lower']
 
-elemSymNum :: Parser MolecularFormula
+elemSymNum :: Parser ChemicalFormula
 elemSymNum = do
     sym <- elemSym
     num <- optional L.integer
@@ -36,12 +32,12 @@ elemSymNum = do
                   Nothing -> mkElementSymbolMap [(sym, 1)]
                   Just num' -> mkElementSymbolMap [(sym, fromIntegral num')]
 
-molecularFormula :: Parser MolecularFormula
+molecularFormula :: Parser ChemicalFormula
 molecularFormula = do
     formulas <- many elemSymNum
     return $ mconcat formulas
 
-emptyFormula :: MolecularFormula
+emptyFormula :: ChemicalFormula
 emptyFormula = mkElementSymbolMap []
 
 renderFormula :: (Eq a, Num a, Show a) => ElementSymbolMap a -> String
@@ -50,18 +46,18 @@ renderFormula f = foldMapWithKey foldfunc (getSymbolMap f)
                                                               then ""
                                                               else show num
 
-instance IsString MolecularFormula where
+instance IsString ChemicalFormula where
     fromString s = case parse (molecularFormula <* eof) "" s of
                         Left err -> error $ "Could not parse molecular formula: " ++ show err
                         Right v  -> v
 
-instance Monoid MolecularFormula where
+instance Monoid ChemicalFormula where
     mempty = emptyFormula
     mappend = (|+|)
 
-class MolecularFormulae a where
-    getFormula      :: a -> MolecularFormula
-    getMaybeFormula :: a -> Maybe MolecularFormula
+class ChemicalFormulae a where
+    getFormula      :: a -> ChemicalFormula
+    getMaybeFormula :: a -> Maybe ChemicalFormula
 
 class FormulaMult a b c | a b -> c where
     (|*|) :: a -> b -> c
@@ -80,25 +76,21 @@ infixl 6 |+|
 infixl 7 |*|
 infixl 6 |-|
 
-instance FormulaMult MolecularFormula Int MolecularFormula where
+instance FormulaMult ChemicalFormula Int ChemicalFormula where
     (|*|) = multMolecularFormula
 
-instance FormulaMult Int MolecularFormula MolecularFormula where
+instance FormulaMult Int ChemicalFormula ChemicalFormula where
     (|*|) = flip multMolecularFormula
 
 multMolecularFormula :: Num a => ElementSymbolMap a -> a -> ElementSymbolMap a
 multMolecularFormula m n = (n *) <$> m
 
-monoisotopicMassFormula :: MolecularFormula -> IsotopicMass
-monoisotopicMassFormula = getFormulaSum monoisotopicMass
-
-averageMassFormula :: MolecularFormula -> IsotopicMass
-averageMassFormula = getFormulaSum averageAtomicMass
-
-nominalMassFormula :: MolecularFormula -> IntegerMass
-nominalMassFormula = getFormulaSum nominalMass
+instance Mass ChemicalFormula where
+    monoisotopicMass = getFormulaSum monoisotopicMass
+    averageMass      = getFormulaSum averageMass
+    nominalMass      = getFormulaSum nominalMass
 
 getFormulaSum :: (Num a, Integral b) => (ElementSymbol -> a) -> ElementSymbolMap b -> a
-getFormulaSum f m = sum $ foldFunc f symbolMap <$> keys symbolMap
+getFormulaSum f m = sum $ foldFunc f m <$> keys symbolMap
     where symbolMap = getSymbolMap m
           foldFunc f' m' e = f' e * fromIntegral (m' ! e)

@@ -1,4 +1,4 @@
-module Element
+module Isotope.Element
     ( elementMostAbundantIsotope
     , elementMonoisotopicMass
     , elementNominalMass
@@ -9,7 +9,7 @@ module Element
     , massNumber
     ) where
 
-import Periodic
+import Isotope.Periodic
 import Data.List           (elemIndex)
 import Data.Maybe          (fromJust)
 

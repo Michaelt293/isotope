@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE DeriveFoldable #-}
-module Periodic
+module Isotope.Periodic
     ( IsotopicMass
     , IsotopicAbundance
     , ElementName

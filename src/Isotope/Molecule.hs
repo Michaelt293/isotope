@@ -6,15 +6,15 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Molecule where
+module Isotope.Molecule where
 
 import Text.Megaparsec
 import Text.Megaparsec.String
 import qualified Text.Megaparsec.Lexer as L
 import Data.String
 import Control.Applicative
-import ElementIsotopes
-import Periodic
+import Isotope.ElementIsotopes
+import Isotope.Periodic
 import Data.Map hiding (map)
 
 type MolecularFormula = ElementSymbolMap Int

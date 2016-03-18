@@ -10,7 +10,7 @@ License     : GPL-3
 Maintainer  : Michael Thomas <Michaelt293@gmail.com>
 Stability   : Experimental
 -}
-module ElementIsotopes
+module Isotope.ElementIsotopes
     ( elementSymbolList
     , lookupElement
     , elementName
@@ -30,8 +30,8 @@ import Prelude hiding      (lookup)
 import qualified Data.Map as Map
 import Data.List           (elemIndex)
 import Data.Maybe          (fromJust)
-import Periodic
-import Element
+import Isotope.Periodic
+import Isotope.Element
 
 lookup :: ElementSymbol -> ElementSymbolMap a -> Maybe a
 lookup k m = Map.lookup k (getSymbolMap m)

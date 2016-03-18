@@ -1,2 +1,88 @@
+module Main where
+
+import Test.Hspec
+import ElementIsotopes
+import Element
+import Periodic
+import Molecule
+import Data.Char
+import Data.List
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = hspec $ do
+  describe "ElementIsotopes" $ do
+
+    describe "ElementSymbol" $ do
+      it "should not have more than two characters" $
+        ((<= 2) . length . show) <$> elementSymbolList `shouldSatisfy` and
+      it "second character of a two character ElementSymbol should not be upper case" $
+        (\x -> length x /= 2 || (isLower . last) x) . show <$> elementSymbolList `shouldSatisfy` and
+    describe "lookupElement" $ do
+      it "should not contain duplicate elements" $
+        lookupElement <$> elementSymbolList `shouldSatisfy` allUnique
+    describe "elementName" $ do
+      it "should not be an empty string" $
+        elementName <$> elementSymbolList `shouldSatisfy` notElem ""
+      it "should not start with a capital letter" $
+        isLower . head . elementName <$> elementSymbolList `shouldSatisfy` and
+      it "element names should not be duplicated" $
+        elementName <$> elementSymbolList `shouldSatisfy` allUnique
+
+    describe "atomicNumber" $ do
+      it "should be between 1 and 92" $
+        (\x -> x >= 1 && x <= 92) . atomicNumber <$> elementSymbolList `shouldSatisfy` and
+      it "should not have duplicated atomic numbers" $
+        atomicNumber <$> elementSymbolList `shouldSatisfy` allUnique
+
+    describe "isotopes" $ do
+      it "should not have duplicate isotopes" $
+        isotopes <$> elementSymbolList `shouldSatisfy` allUnique
+
+    describe "mostAbundantIsotope" $ do
+      it "C should be C12 (six protons and six neutrons)" $
+        (nucleons . mostAbundantIsotope) C `shouldBe` (6, 6)
+
+    describe "selectIsotope" $ do
+      it "calling fuction with the arguments C and 12 should select C12" $
+        nucleons (selectIsotope C 12) `shouldBe` (6, 6)
+
+    describe "monoisotopicMass" $ do
+      it "calling function with C should be 12.0" $
+        monoisotopicMass C `shouldBe` 12.0
+
+    describe "nominalMass" $ do
+      it "calling function with C should return 12" $
+        nominalMass C `shouldBe` 12
+
+    describe "isotopicMasses" $ do
+      it "calling function with H should return a list containing 1.007... and 2.014...." $
+        isotopicMasses H `shouldBe` [1.00782503223, 2.01410177812]
+
+    describe "integerMasses" $ do
+      it "calling function with H should return [1, 2]" $
+         integerMasses H `shouldBe` [1, 2]
+      it "proton number should be equal to atomic number" $
+        all protonNumEqAtomicNum elementSymbolList
+
+    describe "averageAtomicMass" $ do
+      it "calling function with C should return 12.0107" $
+        withinTolerance (averageAtomicMass C) 12.0107 0.0001 `shouldBe` True
+
+    describe "isotopicAbundances" $ do
+      it "calling function with C should return [0.9893, 0.0107]" $
+        isotopicAbundances C `shouldBe` [0.9893, 0.0107]
+      it "sum of isotopic abundances for an element should equal 0 or 1" $
+        (\sym -> sumIsotopicAbundance sym == 0
+                     || withinTolerance (sumIsotopicAbundance sym) 1 0.0001) <$> elementSymbolList `shouldSatisfy` and
+
+allUnique :: (Eq a) => [a] -> Bool
+allUnique l = l == nub l
+
+withinTolerance :: (Num a, Ord a) => a -> a -> a -> Bool
+withinTolerance n1 n2 err = abs (n1 - n2) < err
+
+protonNumEqAtomicNum :: ElementSymbol -> Bool
+protonNumEqAtomicNum sym = and $ (== atomicNumber sym) . fst . nucleons <$> isotopes sym
+
+sumIsotopicAbundance :: ElementSymbol -> IsotopicAbundance
+sumIsotopicAbundance = sum . isotopicAbundances

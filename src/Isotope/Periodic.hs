@@ -30,6 +30,8 @@ import Data.List           (elemIndex)
 import Data.Maybe          (fromJust)
 import Isotope.Element
 
+-- | ElementSymbolMap of the periodic table. All data on isotopic masses and
+-- abundances is contained within this map.
 elements :: ElementSymbolMap Element
 elements = mkElementSymbolMap
   [ (H,  Element 1  "hydrogen"     [ Isotope (1, 0)     1.00782503223  0.999885
@@ -324,49 +326,53 @@ elements = mkElementSymbolMap
                                    , Isotope (92, 146)  238.0507884    0.992742 ])
   ]
 
+-- | ElementSymbol is an instance of Mass.
 instance Mass ElementSymbol where
     monoisotopicMass = monoisotopicMass . findElement
     nominalMass = nominalMass . findElement
     averageMass = averageMass . findElement
 
--- |Searches elements (a map) with an ElementSymbol key and returns
--- information on for the element.
+-- | Searches elements (a map) with an ElementSymbol key and returns information
+-- on for the element (wrapped in Maybe).
 lookupElement :: ElementSymbol -> Maybe Element
 lookupElement = flip lookup elements
 
+-- | Searches elements (a map) with an ElementSymbol key and returns information
+-- on for the element.
 findElement :: ElementSymbol -> Element
 findElement = (!) elements
 
--- |Returns the name for an element symbol.
+-- | Returns the name for an element symbol.
 elementName :: ElementSymbol -> ElementName
 elementName = elementName' . findElement
 
--- |Returns the atomic number for an element.
+-- | Returns the atomic number for an element.
 atomicNumber :: ElementSymbol -> AtomicNumber
 atomicNumber = atomicNumber' . findElement
 
--- |Returns all the naturally-occurring isotopes for an element.
+-- | Returns all the naturally-occurring isotopes for an element.
 isotopes :: ElementSymbol -> [Isotope]
 isotopes = isotopes' . findElement
 
--- |Returns the most abundant naturally-occurring isotope for an element.
+-- | Returns the most abundant naturally-occurring isotope for an element.
 mostAbundantIsotope :: ElementSymbol -> Isotope
 mostAbundantIsotope = elementMostAbundantIsotope . findElement
 
--- |Selects an isotope of element based on the isotope's mass number (IntegerMass).
-selectIsotope :: ElementSymbol -> IntegerMass -> Isotope
+-- | Selects an isotope of element based on the isotope's mass number
+-- (IntegerMass).
+selectIsotope :: ElementSymbol -> MassNumber -> Isotope
 selectIsotope sym mass = isotopeList !! indexOfIsotope
     where isotopeList = isotopes sym
           indexOfIsotope = fromJust $ elemIndex mass (integerMasses sym)
 
--- |Exact masses for all naturally-occurring isotopes for an element.
+-- | Exact masses for all naturally-occurring isotopes for an element.
 isotopicMasses :: ElementSymbol -> [IsotopicMass]
 isotopicMasses = elementIsotopicMasses . findElement
 
--- |Integer masses for all naturally-occurring isotopes for an element.
+-- | Integer masses for all naturally-occurring isotopes for an element.
 integerMasses :: ElementSymbol -> [IntegerMass]
 integerMasses = elementIntegerMasses . findElement
 
--- |Isotope abundances for all naturally-occurring isotopes for an element.
+-- | Isotope abundances for all naturally-occurring isotopes for an element.
 isotopicAbundances :: ElementSymbol -> [IsotopicAbundance]
 isotopicAbundances = elementIsotopicAbundances . findElement

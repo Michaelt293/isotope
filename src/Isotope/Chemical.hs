@@ -1,11 +1,24 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Isotope.Chemical where
+module Isotope.Chemical
+  ( ChemicalFormula
+  , ChemicalFormulae(..)
+  , elementSymbol
+  , subFormula
+  , chemicalFormula
+  , emptyFormula
+  , renderFormula
+  , combineSymbolMaps
+  , (|+|)
+  , (|-|)
+  ) where
 
 import Prelude hiding (filter)
+import Data.List hiding (filter)
 import Text.Megaparsec
 import Text.Megaparsec.String
 import qualified Text.Megaparsec.Lexer as L
@@ -19,13 +32,10 @@ type ChemicalFormula = ElementSymbolMap Int
 
 -- | Parses an element symbol string.
 elementSymbol :: Parser ElementSymbol
-elementSymbol = elementSymbol' <?> "element symbol"
-    where elementSymbol' = do
-                         upper <- upperChar
-                         lower <- optional lowerChar
-                         return $ case lower of
-                                       Nothing -> read [upper]
-                                       Just lower' -> read [upper, lower']
+elementSymbol = read <$> choice (try . string <$> elementSymbolStrList)
+    where elementList = show <$> elementSymbolList
+          reverseLengthSort x y = length y `compare` length x
+          elementSymbolStrList = sortBy reverseLengthSort elementList
 
 -- | Parses an sub-formula (i.e., "C2").
 subFormula :: Parser ChemicalFormula
@@ -92,7 +102,7 @@ class FormulaMult a b c | a b -> c where
 -- key-value pairs with non-positive integers.
 combineSymbolMaps :: (Int -> Int -> Int) -> ChemicalFormula ->  ChemicalFormula ->  ChemicalFormula
 combineSymbolMaps f m1 m2 = ElementSymbolMap $
-                                filter (<= 0) $ unionWith f (getSymbolMap m1) (getSymbolMap m2)
+                                filter (>= 0) $ unionWith f (getSymbolMap m1) (getSymbolMap m2)
 
 infixl 6 |+|
 infixl 7 |*|
@@ -111,7 +121,7 @@ instance FormulaMult Int ChemicalFormula ChemicalFormula where
 -- | Helper function for the multiplication of chemical formulae.
 multChemicalFormula :: ChemicalFormula -> Int ->  ChemicalFormula
 multChemicalFormula m n = ElementSymbolMap $
-                              filter (<= 0) $ (n *) <$> getSymbolMap m
+                              filter (>= 0) $ (n *) <$> getSymbolMap m
 
 -- | ChemicalFormula is an instance of Mass.
 instance Mass ChemicalFormula where

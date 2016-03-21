@@ -10,9 +10,10 @@ License     : GPL-3
 Maintainer  : Michael Thomas <Michaelt293@gmail.com>
 Stability   : Experimental
 -}
-module Isotope.Periodic
-    ( elements
-    , elementSymbolList
+module Isotope.Periodic (
+    -- * ElementSymbolMap
+      elements
+    -- * Functions  
     , lookupElement
     , elementName
     , atomicNumber
@@ -25,7 +26,6 @@ module Isotope.Periodic
     ) where
 
 import Prelude hiding      (lookup)
-import qualified Data.Map as Map
 import Data.List           (elemIndex)
 import Data.Maybe          (fromJust)
 import Isotope.Element

@@ -2,17 +2,20 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Isotope.Chemical
-  ( ChemicalFormula
+module Isotope.Chemical (
+  -- * Type synonym
+    ChemicalFormula
+  -- * Type class
   , ChemicalFormulae(..)
+  -- * Parses
   , elementSymbol
-  , subFormula
   , chemicalFormula
+  -- * Functions
   , emptyFormula
   , renderFormula
   , combineSymbolMaps
+  -- * Operators
   , (|+|)
   , (|-|)
   ) where
@@ -68,9 +71,10 @@ renderFormula f = foldMapWithKey foldfunc (getSymbolMap f)
 -- formula to be used directly in source code or in an interactive session.
 -- E.g., "C6H6" :: ChemicalFormula
 instance IsString ChemicalFormula where
-    fromString s = case parse (chemicalFormula <* eof) "" s of
-                        Left err -> error $ "Could not parse molecular formula: " ++ show err
-                        Right v  -> v
+    fromString s =
+      case parse (chemicalFormula <* eof) "" s of
+           Left err -> error $ "Could not parse molecular formula: " ++ show err
+           Right v  -> v
 
 -- | ChemicalFormula is an instance of Monoid.
 instance Monoid ChemicalFormula where
@@ -100,9 +104,11 @@ class FormulaMult a b c | a b -> c where
 
 -- | The function unionWith adapted to work with ElementSymbolMap. Filters out
 -- key-value pairs with non-positive integers.
-combineSymbolMaps :: (Int -> Int -> Int) -> ChemicalFormula ->  ChemicalFormula ->  ChemicalFormula
+combineSymbolMaps :: (Int -> Int -> Int) ->
+                     ChemicalFormula ->  ChemicalFormula ->  ChemicalFormula
 combineSymbolMaps f m1 m2 = ElementSymbolMap $
-                                filter (>= 0) $ unionWith f (getSymbolMap m1) (getSymbolMap m2)
+                                filter (>= 0) $ unionWith f (getSymbolMap m1)
+                                                            (getSymbolMap m2)
 
 infixl 6 |+|
 infixl 7 |*|
@@ -131,6 +137,7 @@ instance Mass ChemicalFormula where
 
 -- | Helper function for the calculating monoistopic masses, average mass and
 -- nominal masses for chemical formulae.
-getFormulaSum :: (Num a, Integral b) => (ElementSymbol -> a) -> ElementSymbolMap b -> a
+getFormulaSum :: (Num a, Integral b) =>
+                 (ElementSymbol -> a) -> ElementSymbolMap b -> a
 getFormulaSum f m = sum $ mapWithKey mapFunc (getSymbolMap m)
                         where mapFunc key val = f key * fromIntegral val

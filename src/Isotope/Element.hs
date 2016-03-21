@@ -1,8 +1,9 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE DeriveFoldable #-}
-module Isotope.Element
-    ( IsotopicMass
+module Isotope.Element (
+    -- * Type synonyms
+      IsotopicMass
     , IsotopicAbundance
     , ElementName
     , AtomicNumber
@@ -14,15 +15,20 @@ module Isotope.Element
     , MonoisotopicMass
     , NominalMass
     , AverageMass
+    -- * Algebraic data types
     , Isotope(..)
     , Element(..)
     , ElementSymbol(..)
-    , elementSymbolList
+    -- * Newtype
     , ElementSymbolMap(..)
+    -- * Type class
+    , Mass(..)
+    -- * List of ElementSymbol
+    , elementSymbolList
+    -- * Functions
     , mkElementSymbolMap
     , lookup
     , (!)
-    , Mass(..)
     , elementMostAbundantIsotope
     , elementIsotopicMasses
     , elementIntegerMasses
@@ -62,7 +68,7 @@ type Nucleons          = (ProtonNumber, NeutronNumber)
 type MassNumber        = Int
 
 -- | Integer mass for an isotope.
-type IntegerMass       = Int
+type IntegerMass       = MassNumber
 
 -- | The exact mass of the most abundant isotope for an element or the sum of
 -- the exact masses of the most abundant isotope of each element for a

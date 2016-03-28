@@ -21,7 +21,8 @@ The Isotope library designed with type safety and flexibility in mind. Key featu
 
 In Isotope, element symbols are represented by the enumeration type, `ElementSymbol`, i.e. `data ElementSymbol = H | He | Li | Be .....`. This is advantageous over the use of strings to represent element symbols (i.e. `type ElementSymbol = String`) since it increases type safety. Isotope provides a range of functions which accepts an `ElementSymbol` as input. For example:
 ```haskell
->>> monoisotopicMass C 12.0
+>>> monoisotopicMass C
+12.0
 ```
 Moreover, values of type `ElementSymbol` can be used as keys within maps (see `ElementSymbolMap` section) as an intuitive way to mark elements to their properties. Isotope library presently contains information on the isotopic masses and relative abundances for all elements from Hydrogen to Bismuth and Thorium and Uranium.
 

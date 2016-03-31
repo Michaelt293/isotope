@@ -63,7 +63,7 @@ Please report bugs and feature suggestions using the issue tracker (https://gith
 
 ## Author
 
-The Isotope library is authored and maintained by Michael Thomas.
+The Isotope library is authored and maintained by Michael Thomas. Isotope logo was designed by Ben Jerrems.
 
 ## License
 

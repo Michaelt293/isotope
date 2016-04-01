@@ -189,4 +189,9 @@ instance IsString MolecularFormula where
            Left err -> error $ "Could not parse molecular formula: " ++ show err
            Right v  -> v
 
-renderMolecularFormula = undefined
+renderMolecularFormula :: MolecularFormula -> String
+renderMolecularFormula = foldMap (\case
+    Left chemForm -> renderFormula chemForm
+    Right (chemFormList, n) ->
+        "(" ++ foldMap renderFormula chemFormList ++ ")" ++ formatNum n)
+            where formatNum n' = if n' == 1 then "" else show n'

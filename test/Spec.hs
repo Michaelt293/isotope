@@ -1,16 +1,13 @@
 module Main where
 
+import Isotope
 import Test.Hspec
-import ElementIsotopes
-import Element
-import Periodic
-import Molecule
 import Data.Char
 import Data.List
 
 main :: IO ()
 main = hspec $ do
-  describe "ElementIsotopes" $ do
+  describe "Elements" $ do
 
     describe "ElementSymbol" $ do
       it "should not have more than two characters" $
@@ -66,7 +63,7 @@ main = hspec $ do
 
     describe "averageAtomicMass" $ do
       it "calling function with C should return 12.0107" $
-        withinTolerance (averageAtomicMass C) 12.0107 0.0001 `shouldBe` True
+        withinTolerance (averageMass C) 12.0107 0.0001 `shouldBe` True
 
     describe "isotopicAbundances" $ do
       it "calling function with C should return [0.9893, 0.0107]" $

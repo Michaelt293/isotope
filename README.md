@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/mrkkrp/megaparsec.svg?branch=master)](https://travis-ci.org/Michaelt293/isotope)
+[![Build Status](https://travis-ci.org/mrkkrp/Michaelt293/isotope.svg?branch=master)](https://travis-ci.org/Michaelt293/isotope)
 ![alt tag](https://github.com/Michaelt293/isotope/blob/master/isotope_jpeg.jpg)
 
 Isotope is a chemistry library for calculating masses of elements and molecules. The main focus of the Isotope library is mass spectrometry, an area where the masses and relative abundances of isotopes and isotopologues is of central importance.

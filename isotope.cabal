@@ -22,7 +22,7 @@ library
                      , Isotope.Chemical
                      , Isotope.Parsers
   build-depends:       base >= 4.7 && < 5
-                     , containers
+                     , containers >= 4.0.0 && <= 4.4.0
                      , megaparsec
   default-language:    Haskell2010
 

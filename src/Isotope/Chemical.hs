@@ -1,6 +1,6 @@
 {-|
 Module      : Isotopic.Chemical
-Description :
+Description : Provides support for chemical and molecular formulae.
 Copyright   : Michael Thomas
 License     : GPL-3
 Maintainer  : Michael Thomas <Michaelt293@gmail.com>
@@ -10,87 +10,46 @@ Stability   : Experimental
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
+{-# OPTIONS_HADDOCK hide #-}
 module Isotope.Chemical (
-  -- * Type synonym
+  -- Type synonym
     ChemicalFormula
-  -- * Type classes
+  , MolecularFormula
+  -- Type classes
   , ToChemicalFormula(..)
   , FormulaMult(..)
-  -- * Parses
-  , elementSymbol
-  , chemicalFormula
-  -- * Functions
-  , emptyFormula
-  , renderFormula
-  , combineSymbolMaps
-  -- * Operators
+  -- Functions
+  , emptyChemicalFormula
+  , renderChemicalFormula
+  , renderMolecularFormula
+  -- Operators
   , (|+|)
   , (|-|)
-  , MolecularFormula
-  , renderMolecularFormula
   ) where
 
-import Prelude hiding (filter)
-import Data.List hiding (filter)
-import Text.Megaparsec
-import Text.Megaparsec.String
-import qualified Text.Megaparsec.Lexer as L
-import Data.String
-import Isotope.Element
+import Isotope.Base
 import Isotope.Periodic()
+import Prelude hiding (filter)
 import Data.Map hiding (map, (!))
 
 -- | 'ChemicalFormula' is a type synonym for @ElementSymbolMap Int@.
 type ChemicalFormula = ElementSymbolMap Int
 
--- | Parses an element symbol string.
-elementSymbol :: Parser ElementSymbol
-elementSymbol = read <$> choice (try . string <$> elementSymbolStrList)
-    where elementList = show <$> elementSymbolList
-          reverseLengthSort x y = length y `compare` length x
-          elementSymbolStrList = sortBy reverseLengthSort elementList
-
--- | Parses an sub-formula (i.e., \"C2\").
-subFormula :: Parser ChemicalFormula
-subFormula = do
-    sym <- elementSymbol
-    num <- optional L.integer
-    return $ case num of
-                  Nothing -> mkElementSymbolMap [(sym, 1)]
-                  Just num' -> mkElementSymbolMap [(sym, fromIntegral num')]
-
--- | Parses a 'ChemicalFormula' (i.e. "C6H6").
-chemicalFormula :: Parser ChemicalFormula
-chemicalFormula = do
-    formulas <- many subFormula
-    return $ mconcat formulas
-
 -- | An empty chemical formula, i.e., a formula with no atoms. This is 'mempty'
 -- in the 'Monoid' instance.
-emptyFormula :: ChemicalFormula
-emptyFormula = mkElementSymbolMap []
+emptyChemicalFormula :: ChemicalFormula
+emptyChemicalFormula = mkElementSymbolMap []
 
 -- | Produces a string with shorthand notation for a chemical formula.
-renderFormula :: (Eq a, Num a, Show a) => ElementSymbolMap a -> String
-renderFormula f = foldMapWithKey foldfunc (getSymbolMap f)
-                      where foldfunc sym num = show sym ++ if num == 1
-                                                              then ""
-                                                              else show num
+renderChemicalFormula :: (Eq a, Num a, Show a) => ElementSymbolMap a -> String
+renderChemicalFormula f = foldMapWithKey foldfunc (getSymbolMap f)
+    where foldfunc sym num = show sym ++ if num == 1
+                                            then ""
+                                            else show num
 
--- | 'IsString' instance for 'ChemicalFormula'. This allows the shorthand chemical
--- formula to be used directly in source code or in an interactive session.
--- E.g., "C6H6" :: ChemicalFormula
-instance IsString ChemicalFormula where
-    fromString s =
-      case parse (chemicalFormula <* eof) "" s of
-           Left err -> error $ "Could not parse chemical formula: " ++ show err
-           Right v  -> v
-
--- | ChemicalFormula is an instance of Monoid.
 instance Monoid ChemicalFormula where
-    mempty = emptyFormula
+    mempty = emptyChemicalFormula
     mappend = (|+|)
 
 -- | Class for types which can map to a chemical formula. This class has two
@@ -100,26 +59,26 @@ class ToChemicalFormula a where
     getMaybeFormula :: a -> Maybe ChemicalFormula
 
 -- | Multiparameter type class for the |*| operator used to multiply chemical
--- formulas.
+-- formulas. (|*|) has the same fixity as (*).
 class FormulaMult a b c | a b -> c where
     (|*|) :: a -> b -> c
 
 -- | Infix operator for the addition of chemical formulae. (|+|) is mappend in
 -- the monoid instance and the same fixity as (+).
 (|+|) :: ChemicalFormula ->  ChemicalFormula ->  ChemicalFormula
-(|+|) =  combineSymbolMaps (+)
+(|+|) =  combineFormulae (+)
 
 -- | Infix operator for the subtraction of chemical formulae. Has the same
 -- fixity as (-).
 (|-|) :: ChemicalFormula ->  ChemicalFormula ->  ChemicalFormula
-(|-|) = combineSymbolMaps (-)
+(|-|) = combineFormulae (-)
 
 -- | The function unionWith adapted to work with ElementSymbolMap. Filters out
 -- key-value pairs with non-positive integers.
-combineSymbolMaps :: (Int -> Int -> Int) ->
+combineFormulae :: (Int -> Int -> Int) ->
                      ChemicalFormula ->  ChemicalFormula ->  ChemicalFormula
-combineSymbolMaps f m1 m2 = ElementSymbolMap $ unionWith f (getSymbolMap m1)
-                                                           (getSymbolMap m2)
+combineFormulae f m1 m2 = ElementSymbolMap $ unionWith f (getSymbolMap m1)
+                                                         (getSymbolMap m2)
 
 infixl 6 |+|
 infixl 7 |*|
@@ -135,7 +94,7 @@ instance FormulaMult ChemicalFormula Int ChemicalFormula where
 instance FormulaMult Int ChemicalFormula ChemicalFormula where
     (|*|) = flip multChemicalFormula
 
--- | Helper function for the multiplication of chemical formulae.
+-- Helper function for the multiplication of chemical formulae.
 multChemicalFormula :: ChemicalFormula -> Int ->  ChemicalFormula
 multChemicalFormula m n = ElementSymbolMap $ (n *) <$> getSymbolMap m
 
@@ -145,13 +104,14 @@ instance Mass ChemicalFormula where
     averageMass      = getFormulaSum averageMass
     nominalMass      = getFormulaSum nominalMass
 
--- | Helper function for the calculating monoistopic masses, average mass and
+-- Helper function for the calculating monoistopic masses, average mass and
 -- nominal masses for chemical formulae.
 getFormulaSum :: (Num a, Integral b) =>
                  (ElementSymbol -> a) -> ElementSymbolMap b -> a
 getFormulaSum f m = sum $ mapWithKey mapFunc (getSymbolMap m)
-                        where mapFunc k v = f k * fromIntegral v
+    where mapFunc k v = f k * fromIntegral v
 
+-- | `MolecularFormula` is a type synonym for molecular formulae.
 type MolecularFormula = [Either ChemicalFormula ([ChemicalFormula], Int)]
 
 instance Mass MolecularFormula where
@@ -165,33 +125,11 @@ instance ToChemicalFormula MolecularFormula where
         Right (molForm, n) -> mconcat molForm |*| n)
     getMaybeFormula x = Just (getFormula x)
 
-parenFormula :: Parser (Either ChemicalFormula ([ChemicalFormula], Int))
-parenFormula = do
-    char '('
-    formula <- some subFormula
-    char ')'
-    num <- optional L.integer
-    return $ Right $ case num of
-                          Nothing -> (formula, 1)
-                          Just num' -> (formula, fromIntegral num')
-
-leftChemicalFormula :: Parser (Either ChemicalFormula ([ChemicalFormula], Int))
-leftChemicalFormula = do
-    formula <- subFormula
-    return $ Left formula
-
-molecularFormula :: Parser MolecularFormula
-molecularFormula = some (leftChemicalFormula <|> parenFormula)
-
-instance IsString MolecularFormula where
-    fromString s =
-      case parse (molecularFormula <* eof) "" s of
-           Left err -> error $ "Could not parse molecular formula: " ++ show err
-           Right v  -> v
-
+-- | Takes a `MolecularFormula` as an argument an returns a formatted string,
+-- i.e., in the form of \"N(CH3)3\".
 renderMolecularFormula :: MolecularFormula -> String
 renderMolecularFormula = foldMap (\case
-    Left chemForm -> renderFormula chemForm
+    Left chemForm -> renderChemicalFormula chemForm
     Right (chemFormList, n) ->
-        "(" ++ foldMap renderFormula chemFormList ++ ")" ++ formatNum n)
+        "(" ++ foldMap renderChemicalFormula chemFormList ++ ")" ++ formatNum n)
             where formatNum n' = if n' == 1 then "" else show n'

@@ -1,19 +1,21 @@
 {-|
-Module      : ElementIsotopes
+Module      : Isotopic.Periodic
 Description : Isotopic masses and relative abundances for all elements from
-              Hydrogen to Bismuth and Thorium and Uranium. Data on isotopic
-              masses and relative abundances obtained from-
-              http://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl/
-              (Accessed: 28/8/2015; uncertainities not provided).
+              Hydrogen to Bismuth and Thorium and Uranium.
 Copyright   : Michael Thomas
 License     : GPL-3
 Maintainer  : Michael Thomas <Michaelt293@gmail.com>
 Stability   : Experimental
+
+Data on isotopic masses and relative abundances obtained from
+<http://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl/>
+(Accessed: 28/8/2015; uncertainities not provided).
 -}
+{-# OPTIONS_HADDOCK hide #-}
 module Isotope.Periodic (
     -- * ElementSymbolMap
       elements
-    -- * Functions  
+    -- * Functions
     , lookupElement
     , elementName
     , atomicNumber
@@ -25,12 +27,13 @@ module Isotope.Periodic (
     , isotopicAbundances
     ) where
 
+import Isotope.Base
+import Isotope.Element
 import Prelude hiding      (lookup)
 import Data.List           (elemIndex)
 import Data.Maybe          (fromJust)
-import Isotope.Element
 
--- | ElementSymbolMap of the periodic table. All data on isotopic masses and
+-- | 'ElementSymbolMap' of the periodic table. All data on isotopic masses and
 -- abundances is contained within this map.
 elements :: ElementSymbolMap Element
 elements = mkElementSymbolMap
@@ -326,19 +329,18 @@ elements = mkElementSymbolMap
                                    , Isotope (92, 146)  238.0507884    0.992742 ])
   ]
 
--- | ElementSymbol is an instance of Mass.
 instance Mass ElementSymbol where
     monoisotopicMass = monoisotopicMass . findElement
     nominalMass = nominalMass . findElement
     averageMass = averageMass . findElement
 
--- | Searches elements (a map) with an ElementSymbol key and returns information
--- on for the element (wrapped in Maybe).
+-- | Searches elements (a map) with an 'ElementSymbol' key and returns
+-- information for the element (wrapped in 'Maybe').
 lookupElement :: ElementSymbol -> Maybe Element
 lookupElement = flip lookup elements
 
--- | Searches elements (a map) with an ElementSymbol key and returns information
--- on for the element.
+-- | Searches 'elements' (a map) with an 'ElementSymbol' key and returns
+-- information for the element.
 findElement :: ElementSymbol -> Element
 findElement = (!) elements
 
@@ -359,7 +361,7 @@ mostAbundantIsotope :: ElementSymbol -> Isotope
 mostAbundantIsotope = elementMostAbundantIsotope . findElement
 
 -- | Selects an isotope of element based on the isotope's mass number
--- (IntegerMass).
+-- ('IntegerMass'). Note: This is a partial function.
 selectIsotope :: ElementSymbol -> MassNumber -> Isotope
 selectIsotope sym mass = isotopeList !! indexOfIsotope
     where isotopeList = isotopes sym

@@ -1,3 +1,13 @@
+{-|
+Module      : Isotope
+Description : Isotope is a chemistry library for calculating masses of elements
+              and molecules.
+Copyright   : Michael Thomas
+License     : GPL-3
+Maintainer  : Michael Thomas <Michaelt293@gmail.com>
+Stability   : Experimental
+
+-}
 module Isotope
   ( IsotopicMass
   , IsotopicAbundance
@@ -20,7 +30,6 @@ module Isotope
   , lookup
   , (!)
   , Mass(..)
-  , massNumber
   , elements
   , lookupElement
   , elementName
@@ -31,14 +40,11 @@ module Isotope
   , integerMasses
   , isotopicMasses
   , isotopicAbundances
-  , elementSymbol
-  , chemicalFormula
-  , emptyFormula
-  , renderFormula
-  , combineSymbolMaps
+  , emptyChemicalFormula
+  , renderChemicalFormula
   ) where
 
-import Prelude hiding (lookup)
-import Isotope.Element
+import Isotope.Base
 import Isotope.Periodic
 import Isotope.Chemical
+import Prelude hiding (lookup)

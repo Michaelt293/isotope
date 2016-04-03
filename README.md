@@ -30,7 +30,7 @@ Moreover, values of type `ElementSymbol` can be used as keys within maps (see `E
 
 ### `ElementSymbolMap`
 
-`ElementSymbolMap` is a newtype wrapper for `Map ElementSymbol a`, that is, a mapping from an `ElementSymbol` to a type variable `a`. Presently within the isotope library, the `ElementSymbolMap` type is used in two places; the `elements` map and `ChemicalFormula` type (see below).
+`ElementSymbolMap` is a newtype wrapper for `Map ElementSymbol a`, that is, a mapping from an `ElementSymbol` to a type variable `a`. Presently within the Isotope library, the `ElementSymbolMap` type is used in two places; the `elements` map and `ChemicalFormula` type (see below).
 
 ### `Element` and `Isotope`
 
@@ -63,6 +63,12 @@ Ouch is a chemistry informatics toolkit written in Haskell by Orion Jankowski (N
 
 Please report bugs and feature suggestions using the issue tracker (https://github.com/Michaelt293/isotope/issues). Pull requests are welcome and will be merged provided they improve Isotope.
 
+## Future directions
+
+Isotopic profiles currently cannot be calculated for chemical formulae. This is a major limitation since isotopic profiles are important in mass spectrometry. Therefore, this functionality should be added to Isotope in a future version. Since calculating isotopic profiles is computationally expensive, this feature could be introduced using Rust if performance is an issue using pure Haskell code. (Rust is a modern systems programming language with a strong type system and memory safety [6].)
+
+To increase compile-time checks, refinement types could be introduced using LiquidHaskell [7]. For example, not all elements have naturally-occurring isotopes and such elements therefore do not have an average mass. Using LiquidHaskell, the function 'averageMass' could be refined to only accept elements with naturally-occurring isotopes. If such a direction is taken, two separate libraries may be maintained; one using LiquidHaskell and the other using only conventional Haskell code.
+
 ## Author
 
 The Isotope library is authored and maintained by Michael Thomas. Isotope logo was designed by Ben Jerrems.
@@ -82,3 +88,7 @@ Copyright © 2015–2016 Michael Thomas
 [4] https://github.com/odj/Ouch
 
 [5] http://www.pharmash.com/tags/OUCH.html
+
+[6] https://www.rust-lang.org/
+
+[7] https://ucsd-progsys.github.io/liquidhaskell-tutorial/01-intro.html

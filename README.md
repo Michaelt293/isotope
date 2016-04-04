@@ -2,6 +2,8 @@
 
 ![alt tag](https://github.com/Michaelt293/isotope/blob/master/isotope_jpeg.jpg)
 
+WARNING: Isotope is currently undergoing major changes in preparation for Hackage. Consequently, this code repository may be broken or be out of line with it's documentation.
+
 * [Isotopic, integer, monoisotopic, nominal and average masses](#isotopic-integer-monoisotopic-nominal-and-average-masses)
 * [Comparison to other chemistry libraries](#comparison-to-other-chemistry-libraries)
     * [Radium](#radium)
@@ -27,6 +29,17 @@ Nominal mass | The integer mass of the most abundant isotope for an element or t
 Average mass | The average mass of an element or molecule based on naturally-occurring abundances. In the isotopes library, average mass is used in place of atomic mass and molecular mass.
 
 For more detailed discussion regarding the concept of mass in mass spectrometry, please refer to "Molecular Weight and the Nominal Mass, Monoisotopic Mass and Average Molar Mass" by Prof. O. David Sparkman [1].
+
+## Chemical and molecular formulae
+
+In the Isotope library, a distinction between chemical and molecular formulae is made.
+
+When using GHCi, it is possible to set a default type to either `ChemicalFormula` or `MolecularFormula`. This means that explicit type annotations (i.e., `"CH4" :: ChemicalFormula`) are not required.
+```
+GHCi> default(ChemicalFormula)
+GHCi> "CH4"
+ElementSymbolMap {getSymbolMap = fromList [(H,4),(C,1)]}
+```
 
 ## Design
 

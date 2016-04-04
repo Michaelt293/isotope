@@ -40,11 +40,9 @@ module Isotope
   , integerMasses
   , isotopicMasses
   , isotopicAbundances
-  , emptyChemicalFormula
-  , renderChemicalFormula
+  , emptyMolecularFormula
+  , renderMolecularFormula
   ) where
 
 import Isotope.Base
-import Isotope.Periodic
-import Isotope.Chemical
 import Prelude hiding (lookup)

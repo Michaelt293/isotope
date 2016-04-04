@@ -1,6 +1,6 @@
 {-|
 Module      : Isotopic.Parsers
-Description : Parsers for chemical and molecular formulae.
+Description : Parsers for chemical and condensed formulae.
 Copyright   : Michael Thomas
 License     : GPL-3
 Maintainer  : Michael Thomas <Michaelt293@gmail.com>
@@ -15,11 +15,10 @@ module Isotope.Parsers (
       elementSymbol
     , subFormula
     , chemicalFormula
-    , molecularFormula
+    , condensedFormula
     ) where
 
 import Isotope.Base
-import Isotope.Chemical
 import Text.Megaparsec
 import Text.Megaparsec.String
 import qualified Text.Megaparsec.Lexer as L
@@ -34,7 +33,7 @@ elementSymbol = read <$> choice (try . string <$> elementSymbolStrList)
           elementSymbolStrList = sortBy reverseLengthSort elementList
 
 -- | Parses an sub-formula (i.e., \"C2\").
-subFormula :: Parser ChemicalFormula
+subFormula :: Parser MolecularFormula
 subFormula = do
     sym <- elementSymbol
     num <- optional L.integer
@@ -42,21 +41,21 @@ subFormula = do
                   Nothing -> mkElementSymbolMap [(sym, 1)]
                   Just num' -> mkElementSymbolMap [(sym, fromIntegral num')]
 
--- | Parses a chemical formula (i.e. \"C6H6O\").
-chemicalFormula :: Parser ChemicalFormula
+-- | Parses a molecular formula (i.e. \"C6H6O\").
+chemicalFormula :: Parser MolecularFormula
 chemicalFormula = do
     formulas <- many subFormula
     return $ mconcat formulas
 
-instance IsString ChemicalFormula where
+instance IsString MolecularFormula where
     fromString s =
       case parse (chemicalFormula <* eof) "" s of
-           Left err -> error $ "Could not parse chemical formula: " ++ show err
+           Left err -> error $ "Could not parse molecular formula: " ++ show err
            Right v  -> v
 
--- Helper function. Parses parenthesed sections in molecular formulae, i.e.,
+-- Helper function. Parses parenthesed sections in condensed formulae, i.e.,
 -- the \"(CH3)3\" section of \"N(CH3)3\".
-parenFormula :: Parser (Either ChemicalFormula ([ChemicalFormula], Int))
+parenFormula :: Parser (Either MolecularFormula ([MolecularFormula], Int))
 parenFormula = do
    _ <- char '('
    formula <- some subFormula
@@ -66,19 +65,19 @@ parenFormula = do
                          Nothing -> (formula, 1)
                          Just num' -> (formula, fromIntegral num')
 
--- Helper function. Parses non-parenthesed sections in molecular formulae, i.e.,
+-- Helper function. Parses non-parenthesed sections in condensed formulae, i.e.,
 -- the \"N\" section of \"N(CH3)3\".
-leftChemicalFormula :: Parser (Either ChemicalFormula ([ChemicalFormula], Int))
-leftChemicalFormula = do
+leftMolecularFormula :: Parser (Either MolecularFormula ([MolecularFormula], Int))
+leftMolecularFormula = do
    formula <- subFormula
    return $ Left formula
 
--- | Parsers a molecular formula, i.e., \"N(CH3)3\".
-molecularFormula :: Parser MolecularFormula
-molecularFormula = many (leftChemicalFormula <|> parenFormula)
+-- | Parsers a condensed formula, i.e., \"N(CH3)3\".
+condensedFormula :: Parser CondensedFormula
+condensedFormula = many (leftMolecularFormula <|> parenFormula)
 
-instance IsString MolecularFormula where
+instance IsString CondensedFormula where
    fromString s =
-     case parse (molecularFormula <* eof) "" s of
-          Left err -> error $ "Could not parse molecular formula: " ++ show err
+     case parse (condensedFormula <* eof) "" s of
+          Left err -> error $ "Could not parse condensed formula: " ++ show err
           Right v  -> v

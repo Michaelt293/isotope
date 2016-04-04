@@ -2,7 +2,7 @@
 
 ![alt tag](https://github.com/Michaelt293/isotope/blob/master/isotope_jpeg.jpg)
 
-WARNING: Isotope is currently undergoing major changes in preparation for Hackage. Consequently, this code repository may be broken or be out of line with it's documentation.
+WARNING: Isotope is currently undergoing major changes in preparation for Hackage. Consequently, this code repository may be broken or be out of line with its documentation.
 
 * [Isotopic, integer, monoisotopic, nominal and average masses](#isotopic-integer-monoisotopic-nominal-and-average-masses)
 * [Comparison to other chemistry libraries](#comparison-to-other-chemistry-libraries)
@@ -30,13 +30,13 @@ Average mass | The average mass of an element or molecule based on naturally-occ
 
 For more detailed discussion regarding the concept of mass in mass spectrometry, please refer to "Molecular Weight and the Nominal Mass, Monoisotopic Mass and Average Molar Mass" by Prof. O. David Sparkman [1].
 
-## Chemical and molecular formulae
+## Molecular and condensed formulae
 
-In the Isotope library, a distinction between chemical and molecular formulae is made.
+In the Isotope library, a distinction between molecular and condensed formulae is made.
 
-When using GHCi, it is possible to set a default type to either `ChemicalFormula` or `MolecularFormula`. This means that explicit type annotations (i.e., `"CH4" :: ChemicalFormula`) are not required.
+When using GHCi, it is possible to set a default type to either `MolecularFormula` or `CondensedFormula`. This means that explicit type annotations (i.e., `"CH4" :: MolecularFormula`) are not required.
 ```
-GHCi> default(ChemicalFormula)
+GHCi> default(MolecularFormula)
 GHCi> "CH4"
 ElementSymbolMap {getSymbolMap = fromList [(H,4),(C,1)]}
 ```
@@ -56,7 +56,7 @@ Moreover, values of type `ElementSymbol` can be used as keys within maps (see `E
 
 ### `ElementSymbolMap`
 
-`ElementSymbolMap` is a newtype wrapper for `Map ElementSymbol a`, that is, a mapping from an `ElementSymbol` to a type variable `a`. Presently within the Isotope library, the `ElementSymbolMap` type is used in two places; the `elements` map and `ChemicalFormula` type (see below).
+`ElementSymbolMap` is a newtype wrapper for `Map ElementSymbol a`, that is, a mapping from an `ElementSymbol` to a type variable `a`. Presently within the Isotope library, the `ElementSymbolMap` type is used in two places; the `elements` map and `MolecularFormula` type (see below).
 
 ### `Element` and `Isotope`
 
@@ -70,7 +70,7 @@ TODO
 
 TODO
 
-### `ChemicalFormula`
+### `MolecularFormula`
 
 TODO
 
@@ -87,7 +87,7 @@ Ouch is a chemistry informatics toolkit written in Haskell by Orion Jankowski (N
 
 ## Future directions
 
-Isotopic profiles currently cannot be calculated for chemical formulae. This is a major limitation since isotopic profiles are important in mass spectrometry. Therefore, this functionality should be added to Isotope in a future version. Since calculating isotopic profiles is computationally expensive, this feature could be introduced using Rust if performance is an issue using pure Haskell code. (Rust is a modern systems programming language with a strong type system and memory safety [6].)
+Isotopic profiles currently cannot be calculated for molecular formulae. This is a major limitation since isotopic profiles are important in mass spectrometry. Therefore, this functionality should be added to Isotope in a future version. Since calculating isotopic profiles is computationally expensive, this feature could be introduced using Rust if performance is an issue using pure Haskell code. (Rust is a modern systems programming language with a strong type system and memory safety [6].)
 
 To increase compile-time checks, refinement types could be introduced using LiquidHaskell [7]. For example, not all elements have naturally-occurring isotopes and such elements therefore do not have an average mass. Using LiquidHaskell, the function `averageMass` could be refined to only accept elements with naturally-occurring isotopes. If such a direction is taken, two separate libraries may be maintained; one using LiquidHaskell and the other using only conventional Haskell code.
 

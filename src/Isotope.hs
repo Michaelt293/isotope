@@ -29,7 +29,7 @@ module Isotope
   , mkElementSymbolMap
   , lookup
   , (!)
-  , Mass(..)
+  , ChemicalMass(..)
   , elements
   , lookupElement
   , elementName

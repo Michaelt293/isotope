@@ -17,9 +17,6 @@ library
   hs-source-dirs:      src
   exposed-modules:     Isotope
                      , Isotope.Base
-                     , Isotope.Element
-                     , Isotope.Periodic
-                     , Isotope.Chemical
                      , Isotope.Parsers
   build-depends:       base >= 4.7 && < 5
                      , containers >= 0.5 && < 0.6

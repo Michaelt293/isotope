@@ -1,7 +1,9 @@
+{-# LANGUAGE FlexibleInstances #-}
 module Main where
 
 import Isotope
 import Test.Hspec
+import Test.QuickCheck
 import Data.Char
 import Data.List
 
@@ -72,6 +74,16 @@ main = hspec $ do
         (\sym -> sumIsotopicAbundance sym == 0
                      || withinTolerance (sumIsotopicAbundance sym) 1 0.0001) <$> elementSymbolList `shouldSatisfy` and
 
+    describe "Monoid instance for MolecularFormula" $ do
+      it "associativity" $ property $
+          \a b c -> (a |+| b) |+| c == a |+| (b |+| c)
+      it "identity element" $ property $
+          \a -> a |+| emptyMolecularFormula == a
+
+    describe "Addition of molecular formulae is commutative" $ do
+      it "commutative" $ property $
+        \a b -> a |+| b == b |+| a
+
 allUnique :: (Eq a) => [a] -> Bool
 allUnique l = l == nub l
 
@@ -83,3 +95,19 @@ protonNumEqAtomicNum sym = and $ (== atomicNumber sym) . fst . nucleons <$> isot
 
 sumIsotopicAbundance :: ElementSymbol -> IsotopicAbundance
 sumIsotopicAbundance = sum . isotopicAbundances
+
+instance Arbitrary ElementSymbol where
+    arbitrary = do
+      n <- choose(0, length elementSymbolList - 1)
+      return $ elementSymbolList !! n
+
+instance Arbitrary (ElementSymbol, Int) where
+    arbitrary = do
+      elemSym <- arbitrary :: Gen ElementSymbol
+      n <- choose (0,100)
+      return (elemSym, n)
+
+instance Arbitrary (ElementSymbolMap Int) where
+    arbitrary = do
+      symNums <- arbitrary :: Gen [(ElementSymbol, Int)]
+      return $ mkElementSymbolMap symNums

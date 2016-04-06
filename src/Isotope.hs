@@ -24,6 +24,7 @@ module Isotope
   , Isotope(..)
   , Element(..)
   , ElementSymbol(..)
+  , MolecularFormula
   , elementSymbolList
   , ElementSymbolMap(..)
   , mkElementSymbolMap
@@ -42,6 +43,7 @@ module Isotope
   , isotopicAbundances
   , emptyMolecularFormula
   , renderMolecularFormula
+  , (|+|)
   ) where
 
 import Isotope.Base

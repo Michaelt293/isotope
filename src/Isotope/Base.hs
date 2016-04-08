@@ -25,45 +25,32 @@ values of type 'Element'.
 {-# LANGUAGE LambdaCase #-}
 {-# OPTIONS_HADDOCK hide #-}
 module Isotope.Base (
-    -- Type synonyms
-      IsotopicMass
-    , IsotopicAbundance
+    -- Type synonyms for masses
+      IntegerMass
+    , MonoisotopicMass
+    , NominalMass
+    , AverageMass
+    , IsotopicMass
+    -- Other type synonyms
     , ElementName
+    , IsotopicAbundance
     , AtomicNumber
     , ProtonNumber
     , NeutronNumber
     , Nucleons
     , MassNumber
-    , IntegerMass
-    , MonoisotopicMass
-    , NominalMass
-    , AverageMass
-    -- Algebraic data types
-    , Isotope(..)
-    , Element(..)
-    , ElementSymbol(..)
-    -- Newtype
-    , ElementSymbolMap(..)
-    -- Type class
-    , ChemicalMass(..)
-    -- List of ElementSymbol
+    -- 'Isotope' and 'Element' data types
+    , Isotope
+    , Element
+    -- Element symbols
+    , ElementSymbol
     , elementSymbolList
-    -- Functions
+    -- 'ElementSymbolMap'
+    , ElementSymbolMap
     , mkElementSymbolMap
     , lookup
     , (!)
-    -- Type synonym
-    , MolecularFormula
-    , CondensedFormula
-    -- Type classes
-    , FormulaMult(..)
-    -- Functions
-    , emptyMolecularFormula
-    , renderMolecularFormula
-    , renderCondensedFormula
-    -- Operators
-    , (|+|)
-    , (|-|)
+    -- Functions taking an 'Element' as input
     , elementMostAbundantIsotope
     , elementIsotopicMasses
     , elementIntegerMasses
@@ -71,19 +58,34 @@ module Isotope.Base (
     , elementMonoisotopicMass
     , elementNominalMass
     , elementAverageMass
-    -- * ElementSymbolMap
-    ,  elements
-    -- * Functions
+    , massNumber
+    -- 'elements' - a map containing isotopic data for each element.
+    , elements
+    -- Functions taking an 'elementSymbol' as input
     , lookupElement
+    , findElement
     , elementName
     , atomicNumber
     , isotopes
     , mostAbundantIsotope
     , selectIsotope
-    , integerMasses
     , isotopicMasses
+    , integerMasses
     , isotopicAbundances
-
+    -- 'ChemicalMass' type class
+    , ChemicalMass
+    -- Molecular formulae
+    , MolecularFormula
+    , emptyMolecularFormula
+    , FormulaMult
+    , (|+|)
+    , (|-|)
+    , combineElementSymbolMaps
+    , multMolecularFormula
+    , renderMolecularFormula
+    -- Condensed formulae
+    , CondensedFormula
+    , renderCondensedFormula
     ) where
 
 import Prelude hiding      (lookup,filter)
@@ -96,31 +98,8 @@ import qualified Data.Map as Map
 import Data.List           (elemIndex)
 import Data.Maybe          (fromJust)
 
-
--- | The exact mass of an isotope.
-type IsotopicMass      = Double
-
--- | The natural abundance of an isotope.
-type IsotopicAbundance = Double
-
--- | The name of an element.
-type ElementName       = String
-
--- | Atomic number of an element.
-type AtomicNumber      = Int
-
--- | Proton number (i.e., the number of protons) for an element/isotope.
-type ProtonNumber      = AtomicNumber
-
--- | Neutron number (i.e., the number of neutrons) for an element.
-type NeutronNumber     = Int
-
--- | Type synonym for a pair containing 'ProtonNumber' and 'NeutronNumber'.
-type Nucleons          = (ProtonNumber, NeutronNumber)
-
--- | The number of protons plus the number of neutrons (i.e., proton number +
--- neutron number) for an isotope.
-type MassNumber        = Int
+--------------------------------------------------------------------------------
+-- Type synonyms for masses
 
 -- | Integer mass for an isotope.
 type IntegerMass       = MassNumber
@@ -139,6 +118,37 @@ type NominalMass       = Int
 -- naturally-occurring abundances.
 type AverageMass       = Double
 
+-- | The exact mass of an isotope.
+type IsotopicMass      = Double
+
+--------------------------------------------------------------------------------
+-- Other type synonyms
+
+-- | The name of an element.
+type ElementName       = String
+
+-- | The natural abundance of an isotope.
+type IsotopicAbundance = Double
+
+-- | Atomic number of an element.
+type AtomicNumber      = Int
+
+-- | Proton number (i.e., the number of protons) for an element/isotope.
+type ProtonNumber      = AtomicNumber
+
+-- | Neutron number (i.e., the number of neutrons) for an element.
+type NeutronNumber     = Int
+
+-- | Type synonym for a pair containing 'ProtonNumber' and 'NeutronNumber'.
+type Nucleons          = (ProtonNumber, NeutronNumber)
+
+-- | The number of protons plus the number of neutrons (i.e., proton number +
+-- neutron number) for an isotope.
+type MassNumber        = Int
+
+--------------------------------------------------------------------------------
+-- 'Isotope' and 'Element' data types
+
 -- | An 'Isotope' has three parameters; 'Nucleons', 'IsotopeMass' and
 -- 'IsotopicAbundance'.
 data Isotope = Isotope { nucleons          :: Nucleons
@@ -153,6 +163,9 @@ data Element = Element { atomicNumber' :: AtomicNumber
                        , isotopes'     :: [Isotope]
                        } deriving (Show, Eq, Ord)
 
+--------------------------------------------------------------------------------
+-- Element symbols
+
 -- | Element symbols as an enumeration type.
 data ElementSymbol = H  | He | Li | Be | B  | C  | N  | O  | F  | Ne | Na | Mg |
                      Al | Si | P  | S  | Cl | Ar | K  | Ca | Sc | Ti | V  | Cr |
@@ -166,6 +179,9 @@ data ElementSymbol = H  | He | Li | Be | B  | C  | N  | O  | F  | Ne | Na | Mg |
 -- | List containing all element symbols.
 elementSymbolList :: [ElementSymbol]
 elementSymbolList = [H .. U]
+
+--------------------------------------------------------------------------------
+-- 'ElementSymbolMap'
 
 -- | An 'ElementSymbolMap' is a polymorphic datatype mapping an 'ElementSymbol'
 -- to some type. 'ElementSymbolMap' is an instance 'Functor', 'Traversable' and
@@ -186,8 +202,8 @@ lookup k m = Map.lookup k (getSymbolMap m)
 (!) :: ElementSymbolMap a -> ElementSymbol -> a
 m ! k = getSymbolMap m Map.! k
 
--- | 'MolecularFormula' is a type synonym for @ElementSymbolMap Int@.
-type MolecularFormula = ElementSymbolMap Int
+--------------------------------------------------------------------------------
+-- Functions taking an 'Element' as input
 
 -- | Returns the most abundant naturally-occurring isotope for an element.
 elementMostAbundantIsotope :: Element -> Isotope
@@ -208,12 +224,15 @@ elementIntegerMasses e = massNumber . nucleons <$> isotopes' e
 elementIsotopicAbundances :: Element -> [IsotopicAbundance]
 elementIsotopicAbundances e = isotopicAbundance <$> isotopes' e
 
+-- | Monoistopic mass for an element.
 elementMonoisotopicMass :: Element -> IsotopicMass
 elementMonoisotopicMass = isotopicMass . elementMostAbundantIsotope
 
+-- | Nominal mass for an element.
 elementNominalMass :: Element -> MassNumber
 elementNominalMass = massNumber . nucleons . elementMostAbundantIsotope
 
+-- | Average mass of an element.
 elementAverageMass :: Element -> IsotopicMass
 elementAverageMass e = sum [isotopicMass x * isotopicAbundance x |
                             x <- isotopes' e]
@@ -222,104 +241,8 @@ elementAverageMass e = sum [isotopicMass x * isotopicAbundance x |
 -- number of neutrons.
 massNumber :: Nucleons -> MassNumber
 massNumber (protonNum, neutronNum) = protonNum + neutronNum
-
--- | Class containing three methods; 'monoisotopicMass', 'nominalMass' and
--- 'averageMass'.
-class ChemicalMass a where
-     getElementalComposition :: a -> MolecularFormula
-     monoisotopicMass        :: a -> MonoisotopicMass
-     nominalMass             :: a -> NominalMass
-     averageMass             :: a -> AverageMass
-     monoisotopicMass x = getFormulaSum elementMonoisotopicMass (getElementalComposition x)
-     nominalMass x     = getFormulaSum elementNominalMass (getElementalComposition x)
-     averageMass x     = getFormulaSum  elementAverageMass (getElementalComposition x)
-     {-# MINIMAL (getElementalComposition) #-}
--- findElement common to three methods. Refactor!
-
--- Helper function for the calculating monoistopic masses, average mass and
--- nominal masses for molecular formulae.
-getFormulaSum :: (Num a, Integral b) =>
-               (Element -> a) -> ElementSymbolMap b -> a
-getFormulaSum f m = sum $ mapWithKey mapFunc (getSymbolMap m)
-  where mapFunc k v = (f . findElement) k * fromIntegral v
-
--- | An empty molecular formula, i.e., a formula with no atoms. This is 'mempty'
--- in the 'Monoid' instance.
-emptyMolecularFormula :: MolecularFormula
-emptyMolecularFormula = mkElementSymbolMap []
-
--- | Produces a string with shorthand notation for a molecular formula.
-renderMolecularFormula :: (Eq a, Num a, Show a) => ElementSymbolMap a -> String
-renderMolecularFormula f = foldMapWithKey foldfunc (getSymbolMap f)
-   where foldfunc sym num = show sym ++ if num == 1
-                                           then ""
-                                           else show num
--- Use the Hill system for writing molecular formulas. C then H followed by
--- elements in alphabetical order.
-
-instance Monoid MolecularFormula where
-   mempty = emptyMolecularFormula
-   mappend = (|+|)
-
--- | Multiparameter type class for the |*| operator used to multiply chemical
--- formulas. (|*|) has the same fixity as (*).
-class FormulaMult a b c | a b -> c where
-   (|*|) :: a -> b -> c
-
--- | Infix operator for the addition of molecular formulae. (|+|) is mappend in
--- the monoid instance and the same fixity as (+).
-(|+|) :: MolecularFormula ->  MolecularFormula ->  MolecularFormula
-(|+|) =  combineFormulae (+)
-
--- | Infix operator for the subtraction of molecular formulae. Has the same
--- fixity as (-).
-(|-|) :: MolecularFormula ->  MolecularFormula ->  MolecularFormula
-(|-|) = combineFormulae (-)
-
--- | The function unionWith adapted to work with ElementSymbolMap. Filters out
--- key-value pairs with non-positive integers.
-combineFormulae :: (a -> a -> a)
-               -> ElementSymbolMap a -> ElementSymbolMap a -> ElementSymbolMap a
-combineFormulae f m1 m2 = ElementSymbolMap $ unionWith f (getSymbolMap m1)
-                                                        (getSymbolMap m2)
-
-infixl 6 |+|
-infixl 7 |*|
-infixl 6 |-|
-
--- | Infix operator for the multiplication of molecular formulae. Has the same
--- fixity as (*).
-instance FormulaMult MolecularFormula Int MolecularFormula where
-   (|*|) = multMolecularFormula
-
--- | Infix operator for the multiplication of molecular formulae. Has the same
--- fixity as (*).
-instance FormulaMult Int MolecularFormula MolecularFormula where
-   (|*|) = flip multMolecularFormula
-
--- Helper function for the multiplication of molecular formulae.
-multMolecularFormula :: MolecularFormula -> Int ->  MolecularFormula
-multMolecularFormula m n = ElementSymbolMap $ (n *) <$> getSymbolMap m
-
-instance ChemicalMass MolecularFormula where
-    getElementalComposition = id
-
--- | `CondensedFormula` is a type synonym for condensed formulae.
-type CondensedFormula = [Either MolecularFormula ([MolecularFormula], Int)]
-
-instance ChemicalMass CondensedFormula where
-   getElementalComposition = foldMap (\case
-       Left chemForm -> chemForm
-       Right (molForm, n) -> mconcat molForm |*| n)
-
--- | Takes a `CondensedFormula` as an argument an returns a formatted string,
--- i.e., in the form of \"N(CH3)3\".
-renderCondensedFormula :: CondensedFormula -> String
-renderCondensedFormula = foldMap (\case
-   Left chemForm -> renderMolecularFormula chemForm
-   Right (chemFormList, n) ->
-       "(" ++ foldMap renderMolecularFormula chemFormList ++ ")" ++ formatNum n)
-           where formatNum n' = if n' == 1 then "" else show n'
+--------------------------------------------------------------------------------
+-- 'elements' - a map containing isotopic data for each element.
 
 -- | 'ElementSymbolMap' of the periodic table. All data on isotopic masses and
 -- abundances is contained within this map.
@@ -620,6 +543,9 @@ elements = mkElementSymbolMap
 instance ChemicalMass ElementSymbol where
     getElementalComposition x = mkElementSymbolMap [(x, 1)]
 
+--------------------------------------------------------------------------------
+-- Functions taking an 'elementSymbol' as input
+
 -- | Searches elements (a map) with an 'ElementSymbol' key and returns
 -- information for the element (wrapped in 'Maybe').
 lookupElement :: ElementSymbol -> Maybe Element
@@ -664,3 +590,110 @@ integerMasses = elementIntegerMasses . findElement
 -- | Isotope abundances for all naturally-occurring isotopes for an element.
 isotopicAbundances :: ElementSymbol -> [IsotopicAbundance]
 isotopicAbundances = elementIsotopicAbundances . findElement
+
+--------------------------------------------------------------------------------
+-- 'ChemicalMass' type class
+
+-- | Class containing three methods; 'monoisotopicMass', 'nominalMass' and
+-- 'averageMass'.
+class ChemicalMass a where
+     getElementalComposition :: a -> MolecularFormula
+     monoisotopicMass        :: a -> MonoisotopicMass
+     nominalMass             :: a -> NominalMass
+     averageMass             :: a -> AverageMass
+     monoisotopicMass = getFormulaSum elementMonoisotopicMass
+     nominalMass      = getFormulaSum elementNominalMass
+     averageMass      = getFormulaSum elementAverageMass
+     {-# MINIMAL (getElementalComposition) #-}
+
+-- Helper function for the calculating monoistopic masses, average mass and
+-- nominal masses for molecular formulae.
+getFormulaSum :: (Num a, ChemicalMass b) => (Element -> a) -> b -> a
+getFormulaSum f m = sum $ mapWithKey mapFunc ((getSymbolMap . getElementalComposition) m)
+  where mapFunc k v = (f . findElement) k * fromIntegral v
+
+--------------------------------------------------------------------------------
+-- Molecular formulae
+
+-- | 'MolecularFormula' is a type synonym for @ElementSymbolMap Int@.
+type MolecularFormula = ElementSymbolMap Int
+
+-- | An empty molecular formula, i.e., a formula with no atoms. This is 'mempty'
+-- in the 'Monoid' instance.
+emptyMolecularFormula :: MolecularFormula
+emptyMolecularFormula = mkElementSymbolMap []
+
+instance Monoid MolecularFormula where
+   mempty = emptyMolecularFormula
+   mappend = (|+|)
+
+-- | Multiparameter type class for the |*| operator used to multiply chemical
+-- formulas. (|*|) has the same fixity as (*).
+class FormulaMult a b c | a b -> c where
+   (|*|) :: a -> b -> c
+
+-- | Infix operator for the addition of molecular formulae. (|+|) is mappend in
+-- the monoid instance and the same fixity as (+).
+(|+|) :: MolecularFormula ->  MolecularFormula ->  MolecularFormula
+(|+|) =  combineElementSymbolMaps (+)
+
+-- | Infix operator for the subtraction of molecular formulae. Has the same
+-- fixity as (-).
+(|-|) :: MolecularFormula ->  MolecularFormula ->  MolecularFormula
+(|-|) = combineElementSymbolMaps (-)
+
+infixl 6 |+|
+infixl 7 |*|
+infixl 6 |-|
+
+-- | Infix operator for the multiplication of molecular formulae. Has the same
+-- fixity as (*).
+instance FormulaMult MolecularFormula Int MolecularFormula where
+   (|*|) = multMolecularFormula
+
+-- | Infix operator for the multiplication of molecular formulae. Has the same
+-- fixity as (*).
+instance FormulaMult Int MolecularFormula MolecularFormula where
+   (|*|) = flip multMolecularFormula
+
+-- | The function unionWith adapted to work with ElementSymbolMap.
+combineElementSymbolMaps :: (a -> a -> a)
+              -> ElementSymbolMap a -> ElementSymbolMap a -> ElementSymbolMap a
+combineElementSymbolMaps f m1 m2 = ElementSymbolMap $ unionWith f (getSymbolMap m1)
+                                                                  (getSymbolMap m2)
+
+-- Helper function for the multiplication of molecular formulae.
+multMolecularFormula :: MolecularFormula -> Int ->  MolecularFormula
+multMolecularFormula m n = ElementSymbolMap $ (n *) <$> getSymbolMap m
+
+instance ChemicalMass MolecularFormula where
+    getElementalComposition = id
+
+-- | Produces a string with shorthand notation for a molecular formula.
+renderMolecularFormula :: (Eq a, Num a, Show a) => ElementSymbolMap a -> String
+renderMolecularFormula f = foldMapWithKey foldfunc (getSymbolMap f)
+   where foldfunc sym num = show sym ++ if num == 1
+                                           then ""
+                                           else show num
+-- Use the Hill system for writing molecular formulas. C then H followed by
+-- elements in alphabetical order.
+
+--------------------------------------------------------------------------------
+-- Condensed formulae
+
+-- | `CondensedFormula` is a type synonym for condensed formulae.
+type CondensedFormula = [Either MolecularFormula ([MolecularFormula], Int)]
+
+instance ChemicalMass CondensedFormula where
+   getElementalComposition = foldMap (\case
+       Left chemForm -> chemForm
+       Right (molForm, n) -> mconcat molForm |*| n)
+
+-- | Takes a `CondensedFormula` as an argument an returns a formatted string,
+-- i.e., in the form of \"N(CH3)3\".
+renderCondensedFormula :: CondensedFormula -> String
+renderCondensedFormula = foldMap (\case
+   Left chemForm -> renderMolecularFormula chemForm
+   Right (chemFormList, n) ->
+       "(" ++ foldMap renderMolecularFormula chemFormList ++ ")" ++ formatNum n)
+           where formatNum n' = if n' == 1 then "" else show n'

@@ -8,43 +8,70 @@ Maintainer  : Michael Thomas <Michaelt293@gmail.com>
 Stability   : Experimental
 
 -}
-module Isotope
-  ( IsotopicMass
-  , IsotopicAbundance
+module Isotope (
+  -- * Type synonyms for masses
+    IntegerMass
+  , MonoisotopicMass
+  , NominalMass
+  , AverageMass
+  , IsotopicMass
+  -- * Other type synonyms
   , ElementName
+  , IsotopicAbundance
   , AtomicNumber
   , ProtonNumber
   , NeutronNumber
   , Nucleons
   , MassNumber
-  , IntegerMass
-  , MonoisotopicMass
-  , NominalMass
-  , AverageMass
-  , Isotope(..)
-  , Element(..)
-  , ElementSymbol(..)
-  , MolecularFormula
+  -- * 'Isotope' and 'Element' data types
+  , Isotope
+  , Element
+  -- * Element symbols
+  , ElementSymbol
   , elementSymbolList
-  , ElementSymbolMap(..)
+  -- * 'ElementSymbolMap'
+  , ElementSymbolMap
   , mkElementSymbolMap
   , lookup
   , (!)
-  , ChemicalMass(..)
+  -- * Functions taking an 'Element' as input
+  , elementMostAbundantIsotope
+  , elementIsotopicMasses
+  , elementIntegerMasses
+  , elementIsotopicAbundances
+  , elementMonoisotopicMass
+  , elementNominalMass
+  , elementAverageMass
+  , massNumber
+  -- * 'elements' - a map containing isotopic data for each element.
   , elements
+  -- * Functions taking an 'elementSymbol' as input
   , lookupElement
+  , findElement
   , elementName
   , atomicNumber
   , isotopes
   , mostAbundantIsotope
   , selectIsotope
-  , integerMasses
   , isotopicMasses
+  , integerMasses
   , isotopicAbundances
+  -- * 'ChemicalMass' type class
+  , ChemicalMass
+  -- * Molecular formulae
+  , MolecularFormula
   , emptyMolecularFormula
-  , renderMolecularFormula
+  , FormulaMult
   , (|+|)
+  , (|-|)
+  , combineElementSymbolMaps
+  , multMolecularFormula
+  , renderMolecularFormula
+  -- * Condensed formulae
+  , CondensedFormula
+  , renderCondensedFormula
   ) where
 
 import Isotope.Base
+import Isotope.Parsers()
 import Prelude hiding (lookup)

@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import Isotope
@@ -97,9 +98,7 @@ sumIsotopicAbundance :: ElementSymbol -> IsotopicAbundance
 sumIsotopicAbundance = sum . isotopicAbundances
 
 instance Arbitrary ElementSymbol where
-    arbitrary = do
-      n <- choose(0, length elementSymbolList - 1)
-      return $ elementSymbolList !! n
+    arbitrary = oneof $ return <$> elementSymbolList
 
 instance Arbitrary (ElementSymbol, Int) where
     arbitrary = do

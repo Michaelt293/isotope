@@ -6,7 +6,7 @@ License     : GPL-3
 Maintainer  : Michael Thomas <Michaelt293@gmail.com>
 Stability   : Experimental
 
-This module provides parsers for element symbols as well chemical and molecular
+This module provides parsers for element symbols as well molecular and condensed
 formulae. In addition, instances of `IsString` are provided.
 -}
 {-# LANGUAGE FlexibleInstances #-}
@@ -14,7 +14,7 @@ module Isotope.Parsers (
     -- * Parsers
       elementSymbol
     , subFormula
-    , chemicalFormula
+    , molecularFormula
     , condensedFormula
     ) where
 
@@ -42,14 +42,14 @@ subFormula = do
                   Just num' -> mkElementSymbolMap [(sym, fromIntegral num')]
 
 -- | Parses a molecular formula (i.e. \"C6H6O\").
-chemicalFormula :: Parser MolecularFormula
-chemicalFormula = do
+molecularFormula :: Parser MolecularFormula
+molecularFormula = do
     formulas <- many subFormula
     return $ mconcat formulas
 
 instance IsString MolecularFormula where
     fromString s =
-      case parse (chemicalFormula <* eof) "" s of
+      case parse (molecularFormula <* eof) "" s of
            Left err -> error $ "Could not parse molecular formula: " ++ show err
            Right v  -> v
 
@@ -72,7 +72,7 @@ leftMolecularFormula = do
    formula <- subFormula
    return $ Left formula
 
--- | Parsers a condensed formula, i.e., \"N(CH3)3\".
+-- | Parses a condensed formula, i.e., \"N(CH3)3\".
 condensedFormula :: Parser CondensedFormula
 condensedFormula = many (leftMolecularFormula <|> parenFormula)
 

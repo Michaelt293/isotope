@@ -7,6 +7,10 @@ License     : GPL-3
 Maintainer  : Michael Thomas <Michaelt293@gmail.com>
 Stability   : Experimental
 
+Import this module to work with the Isotope library. Isotope provides a range of
+data types, functions and class abstractions for working with elements and
+molecules. The main focus of Isotope is the calculation of element/molecular
+masses. For more information regarding Isotope, please refer to the README.
 -}
 module Isotope (
   -- * Type synonyms for masses
@@ -24,13 +28,13 @@ module Isotope (
   , Nucleons
   , MassNumber
   -- * 'Isotope' and 'Element' data types
-  , Isotope
-  , Element
+  , Isotope(..)
+  , Element(..)
   -- * Element symbols
-  , ElementSymbol
+  , ElementSymbol(..)
   , elementSymbolList
   -- * 'ElementSymbolMap'
-  , ElementSymbolMap
+  , ElementSymbolMap(..)
   , mkElementSymbolMap
   , lookup
   , (!)
@@ -57,11 +61,11 @@ module Isotope (
   , integerMasses
   , isotopicAbundances
   -- * 'ChemicalMass' type class
-  , ChemicalMass
+  , ChemicalMass(..)
   -- * Molecular formulae
   , MolecularFormula
   , emptyMolecularFormula
-  , FormulaMult
+  , FormulaMult(..)
   , (|+|)
   , (|-|)
   , combineElementSymbolMaps

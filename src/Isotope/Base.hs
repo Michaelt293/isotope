@@ -40,13 +40,13 @@ module Isotope.Base (
     , Nucleons
     , MassNumber
     -- 'Isotope' and 'Element' data types
-    , Isotope
-    , Element
+    , Isotope(..)
+    , Element(..)
     -- Element symbols
-    , ElementSymbol
+    , ElementSymbol(..)
     , elementSymbolList
     -- 'ElementSymbolMap'
-    , ElementSymbolMap
+    , ElementSymbolMap(..)
     , mkElementSymbolMap
     , lookup
     , (!)
@@ -73,11 +73,11 @@ module Isotope.Base (
     , integerMasses
     , isotopicAbundances
     -- 'ChemicalMass' type class
-    , ChemicalMass
+    , ChemicalMass(..)
     -- Molecular formulae
     , MolecularFormula
     , emptyMolecularFormula
-    , FormulaMult
+    , FormulaMult(..)
     , (|+|)
     , (|-|)
     , combineElementSymbolMaps

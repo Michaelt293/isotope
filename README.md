@@ -30,16 +30,6 @@ Average mass | The average mass of an element or molecule based on naturally-occ
 
 For more detailed discussion regarding the concept of mass in mass spectrometry, please refer to "Molecular Weight and the Nominal Mass, Monoisotopic Mass and Average Molar Mass" by Prof. O. David Sparkman [1].
 
-## Molecular and condensed formulae
-
-In the Isotope library, a distinction between molecular and condensed formulae is made.
-
-When using GHCi, it is possible to set a default type to either `MolecularFormula` or `CondensedFormula`. This means that explicit type annotations (i.e., `"CH4" :: MolecularFormula`) are not required.
-```
-GHCi> default(MolecularFormula)
-GHCi> "CH4"
-ElementSymbolMap {getSymbolMap = fromList [(H,4),(C,1)]}
-```
 
 ## Design
 
@@ -49,10 +39,10 @@ The Isotope library designed with type safety and flexibility in mind. Key featu
 
 In Isotope, element symbols are represented by the enumeration type, `ElementSymbol`, i.e. `data ElementSymbol = H | He | Li | Be .....`. This is advantageous over the use of strings to represent element symbols (i.e. `type ElementSymbol = String`) since it increases type safety. Isotope provides a range of functions which accepts an `ElementSymbol` as input. For example:
 ```haskell
->>> monoisotopicMass C
+GHCi> monoisotopicMass C
 12.0
 ```
-Moreover, values of type `ElementSymbol` can be used as keys within maps (see `ElementSymbolMap` section) as an intuitive way to mark elements to their properties. Isotope library presently contains information on the isotopic masses and relative abundances for all elements from Hydrogen to Bismuth and Thorium and Uranium.
+Moreover, values of type `ElementSymbol` can be used as keys within maps (see `ElementSymbolMap` section) as an intuitive way to map elements to their properties. Isotope presently contains information on the isotopic masses and relative abundances for all elements from Hydrogen to Bismuth and Thorium and Uranium.
 
 ### `ElementSymbolMap`
 
@@ -66,13 +56,25 @@ TODO
 
 TODO
 
-### `Mass` type class
+### `ChemicalMass` type class
 
 TODO
 
-### `MolecularFormula`
+### Molecular and condensed formulae
 
-TODO
+In the Isotope library, a distinction between molecular and condensed formulae is made. Molecular formulae contain the total number of atoms for each element of a molecule. Conversely, condensed formulae give information on the connectivity of atoms within molecules. For example, the molecule trimethylamine has a molecular formula of C3H9N and a condensed formula of N(CH3)3. Here the molecular formula indicates trimethyelamine has a total of 3 carbon atoms, 9 hydrogen atoms and 1 nitrogen whereas the condensed formula indicates trimethylamine has 3 methyl groups bonded to a central nitrogen.
+
+`MolecularFormula` and `CondensedFormula` are instances of `IsString`. Therefore, shorthand notation can be used when working with molecular and condensed molecular formulae in addition to the constructor `mkElementSymbolMap`.
+```haskell
+GHCi> ("CH4" :: MolecularFormula) == mkElementSymbolMap [(C,1),(H,4)]
+True
+```
+Note however, that if molecular formula strings are used in source code, errors will not be detected at compile-time and will result in run-time errors. Therefore, it is preferable to use the constructor `mkElementSymbolMap` or to use GHCi to convert molecular formula strings to `MolecularFormula` values which can then be copied and pasted into source code. When using GHCi, it is possible to set a default type to either `MolecularFormula` or `CondensedFormula` for convenience. This means that explicit type annotations (i.e., `"CH4" :: MolecularFormula`) are not required.
+```haskell
+GHCi> default(MolecularFormula)
+GHCi> "CH4"
+ElementSymbolMap {getSymbolMap = fromList [(H,4),(C,1)]}
+```
 
 ## Comparison to other chemistry libraries
 In addition to Isotope, there are two other open-source chemistry libraries written in Haskell; Radium [2] and Ouch [3].

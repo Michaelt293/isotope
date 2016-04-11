@@ -68,8 +68,8 @@ module Isotope (
   , FormulaMult(..)
   , (|+|)
   , (|-|)
-  , combineElementSymbolMaps
   , multMolecularFormula
+  , mkMolecularFormula
   , renderMolecularFormula
   -- * Condensed formulae
   , CondensedFormula

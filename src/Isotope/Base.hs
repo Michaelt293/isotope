@@ -80,8 +80,8 @@ module Isotope.Base (
     , FormulaMult(..)
     , (|+|)
     , (|-|)
-    , combineElementSymbolMaps
     , multMolecularFormula
+    , mkMolecularFormula
     , renderMolecularFormula
     -- Condensed formulae
     , CondensedFormula
@@ -93,6 +93,7 @@ import Data.Map            ( Map
                            , fromList
                            , foldMapWithKey
                            , unionWith
+                           , filter
                            , mapWithKey)
 import qualified Data.Map as Map
 import Data.List           (elemIndex)
@@ -635,12 +636,12 @@ class FormulaMult a b c | a b -> c where
 -- | Infix operator for the addition of molecular formulae. (|+|) is mappend in
 -- the monoid instance and the same fixity as (+).
 (|+|) :: MolecularFormula ->  MolecularFormula ->  MolecularFormula
-(|+|) =  combineElementSymbolMaps (+)
+(|+|) =  combineMolecularFormulae (+)
 
 -- | Infix operator for the subtraction of molecular formulae. Has the same
 -- fixity as (-).
 (|-|) :: MolecularFormula ->  MolecularFormula ->  MolecularFormula
-(|-|) = combineElementSymbolMaps (-)
+(|-|) = combineMolecularFormulae (-)
 
 infixl 6 |+|
 infixl 7 |*|
@@ -656,18 +657,26 @@ instance FormulaMult MolecularFormula Int MolecularFormula where
 instance FormulaMult Int MolecularFormula MolecularFormula where
    (|*|) = flip multMolecularFormula
 
--- | The function unionWith adapted to work with ElementSymbolMap.
-combineElementSymbolMaps :: (a -> a -> a)
-              -> ElementSymbolMap a -> ElementSymbolMap a -> ElementSymbolMap a
-combineElementSymbolMaps f m1 m2 = ElementSymbolMap $ unionWith f (getSymbolMap m1)
+-- The function unionWith adapted to work with 'ElementSymbolMap'.
+combineMolecularFormulae :: (Int -> Int -> Int) -> MolecularFormula -> MolecularFormula -> MolecularFormula
+combineMolecularFormulae f m1 m2 = ElementSymbolMap $ filterZero $ unionWith f
+                                                                  (getSymbolMap m1)
                                                                   (getSymbolMap m2)
 
 -- Helper function for the multiplication of molecular formulae.
 multMolecularFormula :: MolecularFormula -> Int ->  MolecularFormula
-multMolecularFormula m n = ElementSymbolMap $ (n *) <$> getSymbolMap m
+multMolecularFormula m n = ElementSymbolMap . filterZero $ (n *) <$> getSymbolMap m
+
+-- Helper function to remove k v pairs where v == 0.
+filterZero :: Map k Int -> Map k Int
+filterZero = filter (/= 0)
 
 instance ChemicalMass MolecularFormula where
     getElementalComposition = id
+
+-- | Smart constructor to make values of type 'MolecularFormula'.
+mkMolecularFormula :: [(ElementSymbol, Int)] -> MolecularFormula
+mkMolecularFormula = ElementSymbolMap . filterZero . fromList
 
 -- | Produces a string with shorthand notation for a molecular formula.
 renderMolecularFormula :: (Eq a, Num a, Show a) => ElementSymbolMap a -> String

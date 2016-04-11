@@ -58,7 +58,7 @@ GHCi> default(MolecularFormula)
 GHCi> "CH4"
 ElementSymbolMap {getSymbolMap = fromList [(H,4),(C,1)]}
 ```
-The Isotope library comes with three operators for working with molecular formulae; `|+|`, `|-|` and `|\*|`. These operators have the same fixity and associativity as `+`, `-` and `\*`, respectively. This allows us to the `|+|`, `|-|` and `|\*|` operators in an intuitive manner (i.e., like basic arithmetic). For example, we could define the molecule formula of propane in terms of its building blocks; that is, 2 methyl groups and 1 methylene group.
+The Isotope library comes with three operators for working with molecular formulae; `|+|`, `|-|` and `|*|`. These operators have the same fixity and associativity as `+`, `-` and `*`, respectively. This allows us to the `|+|`, `|-|` and `|*|` operators in an intuitive manner (i.e., like basic arithmetic). For example, we could define the molecule formula of propane in terms of its building blocks; that is, 2 methyl groups and 1 methylene group.
 ```haskell
 GHCi> let methyl = "CH3" :: MolecularFormula
 GHCi> let methylene = "CH2" :: MolecularFormula

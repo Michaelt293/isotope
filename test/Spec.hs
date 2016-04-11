@@ -85,6 +85,18 @@ main = hspec $ do
       it "commutative" $ property $
         \a b -> a |+| b == b |+| a
 
+    describe "properties of |+|, |*| and |-|)" $ do
+      it "a |-| a = emptyMolecularFormula" $ property $
+        \a -> a |-| a == emptyMolecularFormula
+      it "a |+| -a == emptyMolecularFormula" $ property $
+        \a -> a |+| (negate <$> a) == emptyMolecularFormula
+      it "a |*| 0 == emptyMolecularFormula" $ property $
+        \a -> (a :: MolecularFormula) |*| (0 :: Int) == emptyMolecularFormula
+      it "a |*| n == n |*| a" $ property $
+        \a n -> (a :: MolecularFormula) |*| (n :: Int) == n |*| a
+      it "a |+| a == 2 |*| a" $ property $
+        \a -> a |+| a == (2 :: Int) |*| (a :: MolecularFormula)
+
 allUnique :: (Eq a) => [a] -> Bool
 allUnique l = l == nub l
 
@@ -103,7 +115,7 @@ instance Arbitrary ElementSymbol where
 instance Arbitrary (ElementSymbol, Int) where
     arbitrary = do
       elemSym <- arbitrary :: Gen ElementSymbol
-      n <- choose (0,100)
+      n <- choose (1,100)
       return (elemSym, n)
 
 instance Arbitrary (ElementSymbolMap Int) where

@@ -68,7 +68,7 @@ ElementSymbolMap {getSymbolMap = fromList [(H,8),(C,3)]}
 ```
 We could then go one step further and define propene to be propane minus molecular hydrogen.
 ```haskell
-GHCi> let propene = propane |-| ("H2" :: MolecularFormula)
+GHCi> let propene = propane |-| "H2"
 GHCi> propene
 ElementSymbolMap {getSymbolMap = fromList [(H,6),(C,3)]}
 ```

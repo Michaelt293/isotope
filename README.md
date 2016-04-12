@@ -47,12 +47,12 @@ In Isotope, element symbols are represented by the enumeration type, `ElementSym
 
 In the Isotope library, a distinction between molecular and condensed formulae is made. Molecular formulae contain the total number of atoms for each element of a molecule. Conversely, condensed formulae give information on the connectivity of atoms within molecules. For example, the molecule trimethylamine has a molecular formula of C3H9N and a condensed formula of N(CH3)3. Here the molecular formula indicates trimethyelamine has a total of 3 carbon atoms, 9 hydrogen atoms and 1 nitrogen whereas the condensed formula indicates trimethylamine has 3 methyl groups bonded to a central nitrogen.
 
-`MolecularFormula` and `CondensedFormula` are instances of `IsString`. Therefore, shorthand notation can be used when working with molecular and condensed molecular formulae in addition to the constructor `mkElementSymbolMap`.
+`MolecularFormula` and `CondensedFormula` are instances of `IsString`. Therefore, shorthand notation can be used when working with molecular and condensed molecular formulae in addition to the smart constructor `mkMolecularFormula`. The use of molecular and condensed formulae strings requires the use of the `OverloadedStrings` extension (`:set -XOverloadedStrings` can be added to the `.ghci` file when working in GHCi).
 ```haskell
 GHCi> ("CH4" :: MolecularFormula) == mkMolecularFormula [(C,1),(H,4)]
 True
 ```
-If molecular formula strings are used in source code, errors will not be detected at compile-time and will result in run-time errors. Therefore, it is preferable to use the smart constructor `mkMolecularFormula` or to use GHCi to convert molecular formula strings to `MolecularFormula` values which can then be copied and pasted into source code. When using GHCi, it is possible to set a default type to either `MolecularFormula` or `CondensedFormula` for convenience. This means that explicit type annotations (i.e., `"CH4" :: MolecularFormula`) are not required.
+If molecular formula strings are used in source code, errors will not be detected at compile-time and will result in run-time errors. Therefore, it is preferable to use the constructor `mkMolecularFormula` or to use GHCi to convert molecular formula strings to `MolecularFormula` values which can then be copied and pasted into source code. When using GHCi, it is possible to set a default type to either `MolecularFormula` or `CondensedFormula` for convenience. This means that explicit type annotations (i.e., `"CH4" :: MolecularFormula`) are not required.
 ```haskell
 GHCi> default(MolecularFormula)
 GHCi> "CH4"

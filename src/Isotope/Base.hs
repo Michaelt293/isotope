@@ -19,8 +19,6 @@ values of type 'Element'.
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# OPTIONS_HADDOCK hide #-}
@@ -77,10 +75,9 @@ module Isotope.Base (
     -- Molecular formulae
     , MolecularFormula
     , emptyMolecularFormula
-    , FormulaMult(..)
     , (|+|)
     , (|-|)
-    , multMolecularFormula
+    , (|*|)
     , mkMolecularFormula
     , renderMolecularFormula
     -- Condensed formulae
@@ -628,11 +625,6 @@ instance Monoid MolecularFormula where
    mempty = emptyMolecularFormula
    mappend = (|+|)
 
--- | Multiparameter type class for the |*| operator used to multiply chemical
--- formulas. (|*|) has the same fixity as (*).
-class FormulaMult a b c | a b -> c where
-   (|*|) :: a -> b -> c
-
 -- | Infix operator for the addition of molecular formulae. (|+|) is mappend in
 -- the monoid instance and the same fixity as (+).
 (|+|) :: MolecularFormula ->  MolecularFormula ->  MolecularFormula
@@ -643,29 +635,20 @@ class FormulaMult a b c | a b -> c where
 (|-|) :: MolecularFormula ->  MolecularFormula ->  MolecularFormula
 (|-|) = combineMolecularFormulae (-)
 
+-- | Infix operator for the multiplication of molecular formulae. Has the same
+-- fixity as (*).
+(|*|) :: Int -> MolecularFormula ->  MolecularFormula
+n |*| m = ElementSymbolMap . filterZero $ (fromIntegral n *) <$> getSymbolMap m
+
 infixl 6 |+|
 infixl 7 |*|
 infixl 6 |-|
-
--- | Infix operator for the multiplication of molecular formulae. Has the same
--- fixity as (*).
-instance FormulaMult MolecularFormula Int MolecularFormula where
-   (|*|) = multMolecularFormula
-
--- | Infix operator for the multiplication of molecular formulae. Has the same
--- fixity as (*).
-instance FormulaMult Int MolecularFormula MolecularFormula where
-   (|*|) = flip multMolecularFormula
 
 -- The function unionWith adapted to work with 'ElementSymbolMap'.
 combineMolecularFormulae :: (Int -> Int -> Int) -> MolecularFormula -> MolecularFormula -> MolecularFormula
 combineMolecularFormulae f m1 m2 = ElementSymbolMap $ filterZero $ unionWith f
                                                                   (getSymbolMap m1)
                                                                   (getSymbolMap m2)
-
--- Helper function for the multiplication of molecular formulae.
-multMolecularFormula :: MolecularFormula -> Int ->  MolecularFormula
-multMolecularFormula m n = ElementSymbolMap . filterZero $ (n *) <$> getSymbolMap m
 
 -- Helper function to remove k v pairs where v == 0.
 filterZero :: Map k Int -> Map k Int
@@ -696,7 +679,7 @@ type CondensedFormula = [Either MolecularFormula ([MolecularFormula], Int)]
 instance ChemicalMass CondensedFormula where
    getElementalComposition = foldMap (\case
        Left chemForm -> chemForm
-       Right (molForm, n) -> mconcat molForm |*| n)
+       Right (molForm, n) -> n |*| mconcat molForm)
 
 -- | Takes a `CondensedFormula` as an argument an returns a formatted string,
 -- i.e., in the form of \"N(CH3)3\".

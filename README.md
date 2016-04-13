@@ -62,7 +62,7 @@ The Isotope library comes with three operators for working with molecular formul
 ```haskell
 GHCi> let methyl = "CH3" :: MolecularFormula
 GHCi> let methylene = "CH2" :: MolecularFormula
-GHCi> let propane = (2 :: Int) |*| methyl |+| methylene
+GHCi> let propane = 2 |*| methyl |+| methylene
 GHCi> propane
 ElementSymbolMap {getSymbolMap = fromList [(H,8),(C,3)]}
 ```

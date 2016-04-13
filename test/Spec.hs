@@ -90,12 +90,10 @@ main = hspec $ do
         \a -> a |-| a == emptyMolecularFormula
       it "a |+| -a == emptyMolecularFormula" $ property $
         \a -> a |+| (negate <$> a) == emptyMolecularFormula
-      it "a |*| 0 == emptyMolecularFormula" $ property $
-        \a -> (a :: MolecularFormula) |*| (0 :: Int) == emptyMolecularFormula
-      it "a |*| n == n |*| a" $ property $
-        \a n -> (a :: MolecularFormula) |*| (n :: Int) == n |*| a
+      it "0 |*| a == emptyMolecularFormula" $ property $
+        \a -> 0 |*| a == emptyMolecularFormula
       it "a |+| a == 2 |*| a" $ property $
-        \a -> a |+| a == (2 :: Int) |*| (a :: MolecularFormula)
+        \a -> a |+| a == 2 |*| a
 
 allUnique :: (Eq a) => [a] -> Bool
 allUnique l = l == nub l

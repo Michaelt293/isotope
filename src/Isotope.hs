@@ -65,10 +65,9 @@ module Isotope (
   -- * Molecular formulae
   , MolecularFormula
   , emptyMolecularFormula
-  , FormulaMult(..)
   , (|+|)
   , (|-|)
-  , multMolecularFormula
+  , (|*|)
   , mkMolecularFormula
   , renderMolecularFormula
   -- * Condensed formulae

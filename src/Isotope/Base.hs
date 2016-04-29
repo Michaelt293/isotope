@@ -17,8 +17,6 @@ An 'ElementSymbolMap' is used in "Isotope.Periodic" to provide a mapping to
 values of type 'Element'.
 -}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# OPTIONS_HADDOCK hide #-}
@@ -43,11 +41,6 @@ module Isotope.Base (
     -- Element symbols
     , ElementSymbol(..)
     , elementSymbolList
-    -- 'ElementSymbolMap'
-    , ElementSymbolMap(..)
-    , mkElementSymbolMap
-    , lookup
-    , (!)
     -- Functions taking an 'Element' as input
     , elementMostAbundantIsotope
     , elementIsotopicMasses
@@ -91,7 +84,9 @@ import Data.Map            ( Map
                            , foldMapWithKey
                            , unionWith
                            , filter
-                           , mapWithKey)
+                           , mapWithKey
+                           , lookup
+                           , (!))
 import qualified Data.Map as Map
 import Data.List           (elemIndex)
 import Data.Maybe          (fromJust)
@@ -179,28 +174,6 @@ elementSymbolList :: [ElementSymbol]
 elementSymbolList = [H .. U]
 
 --------------------------------------------------------------------------------
--- 'ElementSymbolMap'
-
--- | An 'ElementSymbolMap' is a polymorphic datatype mapping an 'ElementSymbol'
--- to some type. 'ElementSymbolMap' is an instance 'Functor', 'Traversable' and
--- 'Foldable' type classes.
-newtype ElementSymbolMap a =
-    ElementSymbolMap {getSymbolMap :: Map ElementSymbol a}
-    deriving (Show, Read, Eq, Ord, Functor, Traversable, Foldable)
-
--- | Function to make an 'ElementSymbolMap'.
-mkElementSymbolMap :: [(ElementSymbol, a)] -> ElementSymbolMap a
-mkElementSymbolMap = ElementSymbolMap . fromList
-
--- | Polymorphic lookup function to get a value from an 'ElementSymbolMap'.
-lookup :: ElementSymbol -> ElementSymbolMap a -> Maybe a
-lookup k m = Map.lookup k (getSymbolMap m)
-
--- | Polymorphic lookup function to get a value from an 'ElementSymbolMap'.
-(!) :: ElementSymbolMap a -> ElementSymbol -> a
-m ! k = getSymbolMap m Map.! k
-
---------------------------------------------------------------------------------
 -- Functions taking an 'Element' as input
 
 -- | Returns the most abundant naturally-occurring isotope for an element.
@@ -244,8 +217,8 @@ massNumber (protonNum, neutronNum) = protonNum + neutronNum
 
 -- | 'ElementSymbolMap' of the periodic table. All data on isotopic masses and
 -- abundances is contained within this map.
-elements :: ElementSymbolMap Element
-elements = mkElementSymbolMap
+elements :: Map ElementSymbol Element
+elements = fromList
   [ (H,  Element 1  "hydrogen"     [ Isotope (1, 0)     1.00782503223  0.999885
                                    , Isotope (1, 1)     2.01410177812  0.000115 ])
   , (He, Element 2  "helium"       [ Isotope (2, 1)     3.0160293201   0.00000134
@@ -539,7 +512,7 @@ elements = mkElementSymbolMap
   ]
 
 instance ChemicalMass ElementSymbol where
-    getElementalComposition x = mkElementSymbolMap [(x, 1)]
+    getElementalComposition x = MolecularFormula . fromList $ [(x, 1)]
 
 --------------------------------------------------------------------------------
 -- Functions taking an 'elementSymbol' as input
@@ -607,19 +580,22 @@ class ChemicalMass a where
 -- Helper function for the calculating monoistopic masses, average mass and
 -- nominal masses for molecular formulae.
 getFormulaSum :: (Num a, ChemicalMass b) => (Element -> a) -> b -> a
-getFormulaSum f m = sum $ mapWithKey mapFunc ((getSymbolMap . getElementalComposition) m)
+getFormulaSum f m = sum $
+    mapWithKey mapFunc (getMolecularFormula (getElementalComposition m))
   where mapFunc k v = (f . findElement) k * fromIntegral v
 
 --------------------------------------------------------------------------------
 -- Molecular formulae
 
 -- | 'MolecularFormula' is a type synonym for @ElementSymbolMap Int@.
-type MolecularFormula = ElementSymbolMap Int
+newtype MolecularFormula = MolecularFormula {
+    getMolecularFormula :: Map ElementSymbol Int }
+        deriving (Show, Read, Eq, Ord)
 
 -- | An empty molecular formula, i.e., a formula with no atoms. This is 'mempty'
 -- in the 'Monoid' instance.
 emptyMolecularFormula :: MolecularFormula
-emptyMolecularFormula = mkElementSymbolMap []
+emptyMolecularFormula = MolecularFormula $ fromList []
 
 instance Monoid MolecularFormula where
    mempty = emptyMolecularFormula
@@ -638,17 +614,20 @@ instance Monoid MolecularFormula where
 -- | Infix operator for the multiplication of molecular formulae. Has the same
 -- fixity as (*).
 (|*|) :: Int -> MolecularFormula ->  MolecularFormula
-n |*| m = ElementSymbolMap . filterZero $ (fromIntegral n *) <$> getSymbolMap m
+n |*| m = MolecularFormula . filterZero $
+              (fromIntegral n *) <$> getMolecularFormula m
 
 infixl 6 |+|
 infixl 7 |*|
 infixl 6 |-|
 
 -- The function unionWith adapted to work with 'ElementSymbolMap'.
-combineMolecularFormulae :: (Int -> Int -> Int) -> MolecularFormula -> MolecularFormula -> MolecularFormula
-combineMolecularFormulae f m1 m2 = ElementSymbolMap $ filterZero $ unionWith f
-                                                                  (getSymbolMap m1)
-                                                                  (getSymbolMap m2)
+combineMolecularFormulae :: (Int -> Int -> Int)
+    -> MolecularFormula -> MolecularFormula -> MolecularFormula
+combineMolecularFormulae f m1 m2 = MolecularFormula $
+                                       filterZero $ unionWith f
+                                                    (getMolecularFormula m1)
+                                                    (getMolecularFormula m2)
 
 -- Helper function to remove k v pairs where v == 0.
 filterZero :: Map k Int -> Map k Int
@@ -659,11 +638,11 @@ instance ChemicalMass MolecularFormula where
 
 -- | Smart constructor to make values of type 'MolecularFormula'.
 mkMolecularFormula :: [(ElementSymbol, Int)] -> MolecularFormula
-mkMolecularFormula = ElementSymbolMap . filterZero . fromList
+mkMolecularFormula = MolecularFormula . filterZero . fromList
 
 -- | Produces a string with shorthand notation for a molecular formula.
-renderMolecularFormula :: (Eq a, Num a, Show a) => ElementSymbolMap a -> String
-renderMolecularFormula f = foldMapWithKey foldfunc (getSymbolMap f)
+renderMolecularFormula :: MolecularFormula -> String
+renderMolecularFormula f = foldMapWithKey foldfunc (getMolecularFormula f)
    where foldfunc sym num = show sym ++ if num == 1
                                            then ""
                                            else show num
@@ -674,18 +653,22 @@ renderMolecularFormula f = foldMapWithKey foldfunc (getSymbolMap f)
 -- Condensed formulae
 
 -- | `CondensedFormula` is a type synonym for condensed formulae.
-type CondensedFormula = [Either MolecularFormula ([MolecularFormula], Int)]
+newtype CondensedFormula = CondensedFormula {
+    getCondensedFormula :: [Either MolecularFormula ([MolecularFormula], Int)] }
+        deriving (Show, Read, Eq, Ord)
 
 instance ChemicalMass CondensedFormula where
-   getElementalComposition = foldMap (\case
-       Left chemForm -> chemForm
-       Right (molForm, n) -> n |*| mconcat molForm)
+   getElementalComposition c = foldMap foldFunc (getCondensedFormula c)
+       where foldFunc = \case
+                         Left chemForm -> chemForm
+                         Right (molForm, n) -> n |*| mconcat molForm
 
 -- | Takes a `CondensedFormula` as an argument an returns a formatted string,
 -- i.e., in the form of \"N(CH3)3\".
 renderCondensedFormula :: CondensedFormula -> String
-renderCondensedFormula = foldMap (\case
-   Left chemForm -> renderMolecularFormula chemForm
-   Right (chemFormList, n) ->
-       "(" ++ foldMap renderMolecularFormula chemFormList ++ ")" ++ formatNum n)
-           where formatNum n' = if n' == 1 then "" else show n'
+renderCondensedFormula c = foldMap foldFunc (getCondensedFormula c)
+    where foldFunc = \case
+                      Left chemForm -> renderMolecularFormula chemForm
+                      Right (chemFormList, n) ->
+                          "(" ++ foldMap renderMolecularFormula chemFormList ++ ")" ++ formatNum n
+                              where formatNum n' = if n' == 1 then "" else show n'

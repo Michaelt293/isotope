@@ -74,8 +74,10 @@ leftMolecularFormula = do
 
 -- | Parses a condensed formula, i.e., \"N(CH3)3\".
 condensedFormula :: Parser CondensedFormula
-condensedFormula = many (leftMolecularFormula <|> parenFormula)
-
+condensedFormula = do
+  result <- many (leftMolecularFormula <|> parenFormula)
+  return $ CondensedFormula result
+  
 instance IsString CondensedFormula where
    fromString s =
      case parse (condensedFormula <* eof) "" s of

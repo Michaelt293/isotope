@@ -7,6 +7,7 @@ import Test.Hspec
 import Test.QuickCheck
 import Data.Char
 import Data.List
+import Data.Map (Map, fromList)
 
 main :: IO ()
 main = hspec $ do
@@ -89,7 +90,7 @@ main = hspec $ do
       it "a |-| a = emptyMolecularFormula" $ property $
         \a -> a |-| a == emptyMolecularFormula
       it "a |+| -a == emptyMolecularFormula" $ property $
-        \a -> a |+| (negate <$> a) == emptyMolecularFormula
+        \a -> a |+| MolecularFormula (negate <$> getMolecularFormula a) == emptyMolecularFormula
       it "0 |*| a == emptyMolecularFormula" $ property $
         \a -> 0 |*| a == emptyMolecularFormula
       it "a |+| a == 2 |*| a" $ property $
@@ -116,7 +117,12 @@ instance Arbitrary (ElementSymbol, Int) where
       n <- choose (1,100)
       return (elemSym, n)
 
-instance Arbitrary (ElementSymbolMap Int) where
+instance Arbitrary (Map ElementSymbol Int) where
     arbitrary = do
       symNums <- arbitrary :: Gen [(ElementSymbol, Int)]
-      return $ mkElementSymbolMap symNums
+      return $ fromList symNums
+
+instance Arbitrary MolecularFormula where
+    arbitrary = do
+      symNums <- arbitrary :: Gen (Map ElementSymbol Int)
+      return $ MolecularFormula symNums

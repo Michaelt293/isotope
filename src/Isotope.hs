@@ -33,11 +33,6 @@ module Isotope (
   -- * Element symbols
   , ElementSymbol(..)
   , elementSymbolList
-  -- * 'ElementSymbolMap'
-  , ElementSymbolMap(..)
-  , mkElementSymbolMap
-  , lookup
-  , (!)
   -- * Functions taking an 'Element' as input
   , elementMostAbundantIsotope
   , elementIsotopicMasses
@@ -63,7 +58,7 @@ module Isotope (
   -- * 'ChemicalMass' type class
   , ChemicalMass(..)
   -- * Molecular formulae
-  , MolecularFormula
+  , MolecularFormula(..)
   , emptyMolecularFormula
   , (|+|)
   , (|-|)
@@ -71,7 +66,7 @@ module Isotope (
   , mkMolecularFormula
   , renderMolecularFormula
   -- * Condensed formulae
-  , CondensedFormula
+  , CondensedFormula(..)
   , renderCondensedFormula
   ) where
 

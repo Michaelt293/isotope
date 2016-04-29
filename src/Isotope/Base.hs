@@ -66,7 +66,7 @@ module Isotope.Base (
     -- 'ChemicalMass' type class
     , ChemicalMass(..)
     -- Molecular formulae
-    , MolecularFormula
+    , MolecularFormula(..)
     , emptyMolecularFormula
     , (|+|)
     , (|-|)
@@ -74,7 +74,7 @@ module Isotope.Base (
     , mkMolecularFormula
     , renderMolecularFormula
     -- Condensed formulae
-    , CondensedFormula
+    , CondensedFormula(..)
     , renderCondensedFormula
     ) where
 
@@ -87,7 +87,6 @@ import Data.Map            ( Map
                            , mapWithKey
                            , lookup
                            , (!))
-import qualified Data.Map as Map
 import Data.List           (elemIndex)
 import Data.Maybe          (fromJust)
 
@@ -595,7 +594,7 @@ newtype MolecularFormula = MolecularFormula {
 -- | An empty molecular formula, i.e., a formula with no atoms. This is 'mempty'
 -- in the 'Monoid' instance.
 emptyMolecularFormula :: MolecularFormula
-emptyMolecularFormula = MolecularFormula $ fromList []
+emptyMolecularFormula = mkMolecularFormula []
 
 instance Monoid MolecularFormula where
    mempty = emptyMolecularFormula

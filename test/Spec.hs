@@ -96,6 +96,12 @@ main = hspec $ do
       it "a |+| a == 2 |*| a" $ property $
         \a -> a |+| a == 2 |*| a
 
+    describe "ToEmpiricalFormula" $ do
+      it "Empty MolecularFormula should return an empty EmpiricalFormula" $
+        toEmpiricalFormula emptyMolecularFormula `shouldBe` emptyMolecularFormula
+      it "Benzene should be \"CH\"" $
+        toEmpiricalFormula ("C6H6" :: MolecularFormula) `shouldBe` ("CH" :: EmpiricalFormula)
+
 allUnique :: (Eq a) => [a] -> Bool
 allUnique l = l == nub l
 

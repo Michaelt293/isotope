@@ -68,6 +68,8 @@ module Isotope (
   -- * Condensed formulae
   , CondensedFormula(..)
   , renderCondensedFormula
+  , EmpiricalFormula
+  , ToEmpiricalFormula(..)
   ) where
 
 import Isotope.Base

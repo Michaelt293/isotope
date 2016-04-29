@@ -76,6 +76,8 @@ module Isotope.Base (
     -- Condensed formulae
     , CondensedFormula(..)
     , renderCondensedFormula
+    , EmpiricalFormula
+    , ToEmpiricalFormula(..)
     ) where
 
 import Prelude hiding      (lookup,filter)
@@ -671,3 +673,18 @@ renderCondensedFormula c = foldMap foldFunc (getCondensedFormula c)
                       Right (chemFormList, n) ->
                           "(" ++ foldMap renderMolecularFormula chemFormList ++ ")" ++ formatNum n
                               where formatNum n' = if n' == 1 then "" else show n'
+
+--------------------------------------------------------------------------------
+
+type EmpiricalFormula = MolecularFormula
+
+class ToEmpiricalFormula a where
+  toEmpiricalFormula :: a -> EmpiricalFormula
+
+instance ToEmpiricalFormula MolecularFormula where
+  toEmpiricalFormula m@(MolecularFormula m')
+    | null m'   = m
+    | otherwise = MolecularFormula $ (`div` greatestCommonDenom m') <$> m'
+
+greatestCommonDenom :: (Integral v) => Map k v -> v
+greatestCommonDenom = foldr gcd 0

@@ -686,5 +686,8 @@ instance ToEmpiricalFormula MolecularFormula where
     | null m'   = m
     | otherwise = MolecularFormula $ (`div` greatestCommonDenom m') <$> m'
 
+instance ToEmpiricalFormula CondensedFormula where
+  toEmpiricalFormula = toEmpiricalFormula . getElementalComposition
+
 greatestCommonDenom :: (Integral v) => Map k v -> v
 greatestCommonDenom = foldr gcd 0

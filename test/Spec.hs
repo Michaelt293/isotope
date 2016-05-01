@@ -99,8 +99,10 @@ main = hspec $ do
     describe "ToEmpiricalFormula" $ do
       it "Empty MolecularFormula should return an empty EmpiricalFormula" $
         toEmpiricalFormula emptyMolecularFormula `shouldBe` emptyMolecularFormula
-      it "Benzene should be \"CH\"" $
+      it "\"C6H6\" should be \"CH\"" $
         toEmpiricalFormula ("C6H6" :: MolecularFormula) `shouldBe` ("CH" :: EmpiricalFormula)
+      it "\"(CH)6\" should be \"CH\"" $
+        toEmpiricalFormula ("(CH)6" :: CondensedFormula) `shouldBe` ("CH" :: EmpiricalFormula)
 
 allUnique :: (Eq a) => [a] -> Bool
 allUnique l = l == nub l

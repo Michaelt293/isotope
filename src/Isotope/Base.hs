@@ -72,12 +72,12 @@ module Isotope.Base (
     , (|-|)
     , (|*|)
     , mkMolecularFormula
-    , renderMolecularFormula
+    , RenderFormula(..)
     -- Condensed formulae
     , CondensedFormula(..)
-    , renderCondensedFormula
-    , EmpiricalFormula
+    , EmpiricalFormula(..)
     , ToEmpiricalFormula(..)
+    , mkEmpiricalFormula
     ) where
 
 import Prelude hiding      (lookup,filter)
@@ -593,14 +593,12 @@ newtype MolecularFormula = MolecularFormula {
     getMolecularFormula :: Map ElementSymbol Int }
         deriving (Show, Read, Eq, Ord)
 
--- | An empty molecular formula, i.e., a formula with no atoms. This is 'mempty'
--- in the 'Monoid' instance.
-emptyMolecularFormula :: MolecularFormula
-emptyMolecularFormula = mkMolecularFormula []
-
 instance Monoid MolecularFormula where
    mempty = emptyMolecularFormula
    mappend = (|+|)
+
+emptyMolecularFormula :: MolecularFormula
+emptyMolecularFormula = mkMolecularFormula []
 
 -- | Infix operator for the addition of molecular formulae. (|+|) is mappend in
 -- the monoid instance and the same fixity as (+).
@@ -637,16 +635,20 @@ filterZero = filter (/= 0)
 instance ChemicalMass MolecularFormula where
     getElementalComposition = id
 
--- | Smart constructor to make values of type 'MolecularFormula'.
+class RenderFormula a where
+    renderFormula :: a -> String
+
 mkMolecularFormula :: [(ElementSymbol, Int)] -> MolecularFormula
 mkMolecularFormula = MolecularFormula . filterZero . fromList
 
+instance RenderFormula MolecularFormula where
+   renderFormula f = foldMapWithKey renderFoldfunc (getMolecularFormula f)
+
 -- | Produces a string with shorthand notation for a molecular formula.
-renderMolecularFormula :: MolecularFormula -> String
-renderMolecularFormula f = foldMapWithKey foldfunc (getMolecularFormula f)
-   where foldfunc sym num = show sym ++ if num == 1
-                                           then ""
-                                           else show num
+renderFoldfunc :: (Eq b, Num b, Show a, Show b) => a -> b -> String
+renderFoldfunc sym num = show sym ++ if num == 1
+                                         then ""
+                                         else show num
 -- Use the Hill system for writing molecular formulas. C then H followed by
 -- elements in alphabetical order.
 
@@ -664,27 +666,35 @@ instance ChemicalMass CondensedFormula where
                          Left chemForm -> chemForm
                          Right (molForm, n) -> n |*| mconcat molForm
 
--- | Takes a `CondensedFormula` as an argument an returns a formatted string,
--- i.e., in the form of \"N(CH3)3\".
-renderCondensedFormula :: CondensedFormula -> String
-renderCondensedFormula c = foldMap foldFunc (getCondensedFormula c)
-    where foldFunc = \case
-                      Left chemForm -> renderMolecularFormula chemForm
-                      Right (chemFormList, n) ->
-                          "(" ++ foldMap renderMolecularFormula chemFormList ++ ")" ++ formatNum n
-                              where formatNum n' = if n' == 1 then "" else show n'
+instance RenderFormula CondensedFormula where
+    renderFormula c = foldMap foldFunc (getCondensedFormula c)
+        where foldFunc = \case
+                          Left chemForm -> renderFormula chemForm
+                          Right (chemFormList, n) ->
+                              "(" ++ foldMap renderFormula chemFormList ++ ")" ++ formatNum n
+                                  where formatNum n' = if n' == 1 then "" else show n'
 
 --------------------------------------------------------------------------------
+newtype EmpiricalFormula = EmpiricalFormula {
+    getEmpiricalFormula :: Map ElementSymbol Int }
+        deriving (Show, Read, Eq, Ord)
 
-type EmpiricalFormula = MolecularFormula
+instance ChemicalMass EmpiricalFormula where
+    getElementalComposition (EmpiricalFormula a) = MolecularFormula a
+
+instance RenderFormula EmpiricalFormula where
+   renderFormula f = foldMapWithKey renderFoldfunc (getEmpiricalFormula f)
+
+mkEmpiricalFormula :: [(ElementSymbol, Int)] -> EmpiricalFormula
+mkEmpiricalFormula = EmpiricalFormula . filterZero . fromList
 
 class ToEmpiricalFormula a where
   toEmpiricalFormula :: a -> EmpiricalFormula
 
 instance ToEmpiricalFormula MolecularFormula where
-  toEmpiricalFormula m@(MolecularFormula m')
-    | null m'   = m
-    | otherwise = MolecularFormula $ (`div` greatestCommonDenom m') <$> m'
+  toEmpiricalFormula (MolecularFormula m)
+    | null m   = EmpiricalFormula m
+    | otherwise = EmpiricalFormula $ (`div` greatestCommonDenom m) <$> m
 
 instance ToEmpiricalFormula CondensedFormula where
   toEmpiricalFormula = toEmpiricalFormula . getElementalComposition

@@ -64,12 +64,12 @@ module Isotope (
   , (|-|)
   , (|*|)
   , mkMolecularFormula
-  , renderMolecularFormula
+  , RenderFormula(..)
   -- * Condensed formulae
   , CondensedFormula(..)
-  , renderCondensedFormula
   , EmpiricalFormula
   , ToEmpiricalFormula(..)
+  , mkEmpiricalFormula
   ) where
 
 import Isotope.Base

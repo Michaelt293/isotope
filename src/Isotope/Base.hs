@@ -67,12 +67,11 @@ module Isotope.Base (
     , ChemicalMass(..)
     -- Molecular formulae
     , MolecularFormula(..)
-    , emptyMolecularFormula
     , (|+|)
     , (|-|)
     , (|*|)
     , mkMolecularFormula
-    , RenderFormula(..)
+    , Formula(..)
     -- Condensed formulae
     , CondensedFormula(..)
     , EmpiricalFormula(..)
@@ -594,11 +593,8 @@ newtype MolecularFormula = MolecularFormula {
         deriving (Show, Read, Eq, Ord)
 
 instance Monoid MolecularFormula where
-   mempty = emptyMolecularFormula
+   mempty = emptyFormula
    mappend = (|+|)
-
-emptyMolecularFormula :: MolecularFormula
-emptyMolecularFormula = mkMolecularFormula []
 
 -- | Infix operator for the addition of molecular formulae. (|+|) is mappend in
 -- the monoid instance and the same fixity as (+).
@@ -635,14 +631,16 @@ filterZero = filter (/= 0)
 instance ChemicalMass MolecularFormula where
     getElementalComposition = id
 
-class RenderFormula a where
+class Formula a where
     renderFormula :: a -> String
+    emptyFormula :: a
 
 mkMolecularFormula :: [(ElementSymbol, Int)] -> MolecularFormula
 mkMolecularFormula = MolecularFormula . filterZero . fromList
 
-instance RenderFormula MolecularFormula where
+instance Formula MolecularFormula where
    renderFormula f = foldMapWithKey renderFoldfunc (getMolecularFormula f)
+   emptyFormula = mkMolecularFormula []
 
 -- | Produces a string with shorthand notation for a molecular formula.
 renderFoldfunc :: (Eq b, Num b, Show a, Show b) => a -> b -> String
@@ -666,13 +664,14 @@ instance ChemicalMass CondensedFormula where
                          Left chemForm -> chemForm
                          Right (molForm, n) -> n |*| mconcat molForm
 
-instance RenderFormula CondensedFormula where
+instance Formula CondensedFormula where
     renderFormula c = foldMap foldFunc (getCondensedFormula c)
         where foldFunc = \case
                           Left chemForm -> renderFormula chemForm
                           Right (chemFormList, n) ->
                               "(" ++ foldMap renderFormula chemFormList ++ ")" ++ formatNum n
                                   where formatNum n' = if n' == 1 then "" else show n'
+    emptyFormula = CondensedFormula []
 
 --------------------------------------------------------------------------------
 newtype EmpiricalFormula = EmpiricalFormula {
@@ -682,8 +681,9 @@ newtype EmpiricalFormula = EmpiricalFormula {
 instance ChemicalMass EmpiricalFormula where
     getElementalComposition (EmpiricalFormula a) = MolecularFormula a
 
-instance RenderFormula EmpiricalFormula where
+instance Formula EmpiricalFormula where
    renderFormula f = foldMapWithKey renderFoldfunc (getEmpiricalFormula f)
+   emptyFormula = mkEmpiricalFormula []
 
 mkEmpiricalFormula :: [(ElementSymbol, Int)] -> EmpiricalFormula
 mkEmpiricalFormula = EmpiricalFormula . filterZero . fromList

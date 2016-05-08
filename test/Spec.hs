@@ -80,25 +80,25 @@ main = hspec $ do
       it "associativity" $ property $
           \a b c -> (a |+| b) |+| c == a |+| (b |+| c)
       it "identity element" $ property $
-          \a -> a |+| emptyMolecularFormula == a
+          \a -> a |+| emptyFormula == a
 
     describe "Addition of molecular formulae is commutative" $ do
       it "commutative" $ property $
         \a b -> a |+| b == b |+| a
 
     describe "properties of |+|, |*| and |-|)" $ do
-      it "a |-| a = emptyMolecularFormula" $ property $
-        \a -> a |-| a == emptyMolecularFormula
-      it "a |+| -a == emptyMolecularFormula" $ property $
-        \a -> a |+| MolecularFormula (negate <$> getMolecularFormula a) == emptyMolecularFormula
-      it "0 |*| a == emptyMolecularFormula" $ property $
-        \a -> 0 |*| a == emptyMolecularFormula
+      it "a |-| a = emptyFormula" $ property $
+        \a -> a |-| a == emptyFormula
+      it "a |+| -a == emptyFormula" $ property $
+        \a -> a |+| MolecularFormula (negate <$> getMolecularFormula a) == emptyFormula
+      it "0 |*| a == emptyFormula" $ property $
+        \a -> 0 |*| a == emptyFormula
       it "a |+| a == 2 |*| a" $ property $
         \a -> a |+| a == 2 |*| a
 
     describe "ToEmpiricalFormula" $ do
       it "Empty MolecularFormula should return an empty EmpiricalFormula" $
-        toEmpiricalFormula emptyMolecularFormula `shouldBe` mkEmpiricalFormula []
+        toEmpiricalFormula (emptyFormula :: MolecularFormula) `shouldBe` mkEmpiricalFormula []
       it "\"C6H6\" should be \"CH\"" $
         toEmpiricalFormula ("C6H6" :: MolecularFormula) `shouldBe` ("CH" :: EmpiricalFormula)
       it "\"(CH)6\" should be \"CH\"" $

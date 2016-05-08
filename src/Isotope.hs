@@ -59,12 +59,11 @@ module Isotope (
   , ChemicalMass(..)
   -- * Molecular formulae
   , MolecularFormula(..)
-  , emptyMolecularFormula
   , (|+|)
   , (|-|)
   , (|*|)
   , mkMolecularFormula
-  , RenderFormula(..)
+  , Formula(..)
   -- * Condensed formulae
   , CondensedFormula(..)
   , EmpiricalFormula

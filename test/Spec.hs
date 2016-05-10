@@ -98,7 +98,7 @@ main = hspec $ do
 
     describe "ToEmpiricalFormula" $ do
       it "Empty MolecularFormula should return an empty EmpiricalFormula" $
-        toEmpiricalFormula (emptyFormula :: MolecularFormula) `shouldBe` mkEmpiricalFormula []
+        toEmpiricalFormula (emptyFormula :: MolecularFormula) `shouldBe` emptyFormula
       it "\"C6H6\" should be \"CH\"" $
         toEmpiricalFormula ("C6H6" :: MolecularFormula) `shouldBe` ("CH" :: EmpiricalFormula)
       it "\"(CH)6\" should be \"CH\"" $

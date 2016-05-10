@@ -62,6 +62,7 @@ module Isotope (
   , (|+|)
   , (|-|)
   , (|*|)
+  , FormulaHelperClass(..)
   , Formula(..)
   -- * Condensed formulae
   , CondensedFormula(..)

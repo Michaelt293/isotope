@@ -71,6 +71,7 @@ module Isotope.Base (
     , (|+|)
     , (|-|)
     , (|*|)
+    , FormulaHelperClass(..)
     , Formula(..)
     -- Condensed formulae
     , CondensedFormula(..)

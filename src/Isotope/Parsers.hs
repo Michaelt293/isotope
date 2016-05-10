@@ -38,8 +38,8 @@ subFormula = do
     sym <- elementSymbol
     num <- optional L.integer
     return $ case num of
-                  Nothing -> mkMolecularFormula [(sym, 1)]
-                  Just num' -> mkMolecularFormula [(sym, fromIntegral num')]
+                  Nothing -> mkFormula [(sym, 1 :: Int)]
+                  Just num' -> mkFormula [(sym, fromIntegral num' :: Int)]
 
 -- | Parses a molecular formula (i.e. \"C6H6O\").
 molecularFormula :: Parser MolecularFormula

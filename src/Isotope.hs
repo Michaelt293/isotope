@@ -62,13 +62,11 @@ module Isotope (
   , (|+|)
   , (|-|)
   , (|*|)
-  , mkMolecularFormula
   , Formula(..)
   -- * Condensed formulae
   , CondensedFormula(..)
   , EmpiricalFormula
   , ToEmpiricalFormula(..)
-  , mkEmpiricalFormula
   ) where
 
 import Isotope.Base

@@ -41,12 +41,13 @@ subFormula = do
                   Nothing -> mkMolecularFormula [(sym, 1)]
                   Just num' -> mkMolecularFormula [(sym, fromIntegral num')]
 
--- | Parses a molecular formula (i.e. \"C6H6O\").
+-- | Parses a molecular formula (i.e. \"C6H6\").
 molecularFormula :: Parser MolecularFormula
 molecularFormula = do
     formulas <- many subFormula
     return $ mconcat formulas
 
+-- | Parses an empirical formula (i.e. \"CH\").
 empiricalFormula :: Parser EmpiricalFormula
 empiricalFormula = do
     formulas <- many subFormula

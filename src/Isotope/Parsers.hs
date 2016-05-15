@@ -47,24 +47,6 @@ molecularFormula = do
     formulas <- many subFormula
     return $ mconcat formulas
 
--- | Parses an empirical formula (i.e. \"CH\").
-empiricalFormula :: Parser EmpiricalFormula
-empiricalFormula = do
-    formulas <- many subFormula
-    return $ case mconcat formulas of
-                 MolecularFormula m -> EmpiricalFormula m
-
-instance IsString MolecularFormula where
-    fromString s =
-      case parse (molecularFormula <* eof) "" s of
-           Left err -> error $ "Could not parse molecular formula: " ++ show err
-           Right v  -> v
-
-instance IsString EmpiricalFormula where
-   fromString s =
-     case parse (empiricalFormula <* eof) "" s of
-          Left err -> error $ "Could not parse empirical formula: " ++ show err
-          Right v  -> v
 
 -- Helper function. Parses parenthesed sections in condensed formulae, i.e.,
 -- the \"(CH3)3\" section of \"N(CH3)3\".
@@ -91,8 +73,20 @@ condensedFormula = do
   result <- many (leftMolecularFormula <|> parenFormula)
   return $ CondensedFormula result
 
+instance IsString MolecularFormula where
+    fromString s =
+      case parse (condensedFormula <* eof) "" s of
+           Left err -> error $ "Could not parse formula: " ++ show err
+           Right v  -> toMolecularFormula v
+
+instance IsString EmpiricalFormula where
+   fromString s =
+     case parse (condensedFormula <* eof) "" s of
+          Left err -> error $ "Could not parse formula: " ++ show err
+          Right v  -> toEmpiricalFormula v
+
 instance IsString CondensedFormula where
    fromString s =
      case parse (condensedFormula <* eof) "" s of
-          Left err -> error $ "Could not parse condensed formula: " ++ show err
+          Left err -> error $ "Could not parse formula: " ++ show err
           Right v  -> v

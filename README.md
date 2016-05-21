@@ -86,10 +86,10 @@ MolecularFormula {getMolecularFormula = fromList [(H,12),(C,4)]}
 GHCi> toEmpiricalFormula dimethylpropane
 EmpiricalFormula {getEmpiricalFormula = fromList [(H,3),(C,1)]}
 ```
-When using condensed, molecular or empirical formula strings, it is possible to this implicitly. For example, the formula "CH3(CH2)2CH3" above could be directly annotated as type `EmpiricalFormula`.
+When using condensed, molecular or empirical formula strings, it is possible to this implicitly. For example, the formula "CH3(CH3)2CH3" above could be directly annotated as type `EmpiricalFormula`.
 ```haskell
 GHCi> "CH3(CH2)2CH3" :: EmpiricalFormula
-EmpiricalFormula {getEmpiricalFormula = fromList [(H,5),(C,2)]}
+EmpiricalFormula {getEmpiricalFormula = fromList [(H,3),(C,1)]}
 ```
 
 ### `ChemicalMass` type class

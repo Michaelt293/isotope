@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/Michaelt293/isotope.svg?branch=master)](https://travis-ci.org/Michaelt293/isotope)
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/Michaelt293/isotope)
 
 ![alt tag](https://github.com/Michaelt293/isotope/blob/master/isotope_jpeg.jpg)
 
@@ -129,7 +130,7 @@ To increase compile-time checks, refinement types could be introduced using Liqu
 
 ## Contributions
 
-Please report bugs and feature suggestions using the issue tracker (https://github.com/Michaelt293/isotope/issues). Pull requests are welcome and will be merged provided they improve Isotope.
+Please report bugs and feature suggestions using the [issue tracker](https://github.com/Michaelt293/isotope/issues). Pull requests are welcome and will be merged provided they improve Isotope. Suggestions or questions about Isotope can also be directed towards the [Gitter room](https://gitter.im/Michaelt293/isotope).
 
 ## Author
 

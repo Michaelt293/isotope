@@ -102,6 +102,15 @@ main = hspec $ do
       it "\"C6H6\" should be \"CH\"" $
         toEmpiricalFormula ("C6H6" :: MolecularFormula) `shouldBe` ("CH" :: EmpiricalFormula)
 
+    describe "renderFormula" $ do
+      it "\"C6H6O\" should be \"C6H6O\"" $
+        renderFormula ("C6H6O" :: MolecularFormula) `shouldBe` "C6H6O"
+      it "\"CCl4\" should be \"CCl4\"" $
+        renderFormula ("CCl4" :: MolecularFormula) `shouldBe` "CCl4"
+      it "\"H2O4S\" should be \"H2O4S\"" $
+        renderFormula ("H2O4S" :: MolecularFormula) `shouldBe` "H2O4S"
+
+
 allUnique :: (Eq a) => [a] -> Bool
 allUnique l = l == nub l
 

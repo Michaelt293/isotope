@@ -89,8 +89,12 @@ import Data.Map            ( Map
                            , filter
                            , mapWithKey
                            , lookup
-                           , (!))
-import Data.List           (elemIndex)
+                           , (!)
+                           , toList
+                           )
+import Data.Foldable hiding (toList)
+import Data.Ord
+import Data.List           (elemIndex, sortBy)
 import Data.Maybe          (fromJust)
 
 --------------------------------------------------------------------------------
@@ -180,10 +184,7 @@ elementSymbolList = [H .. U]
 
 -- | Returns the most abundant naturally-occurring isotope for an element.
 elementMostAbundantIsotope :: Element -> Isotope
-elementMostAbundantIsotope e = isotopeList !! indexOfIsotope
-    where isotopeList = isotopes' e
-          abundances = isotopicAbundance <$> isotopeList
-          indexOfIsotope = fromJust $ elemIndex (maximum abundances) abundances
+elementMostAbundantIsotope e = maximumBy (comparing isotopicAbundance) $ isotopes' e
 
 -- | Exact masses for all naturally-occurring isotopes for an element.
 elementIsotopicMasses :: Element -> [IsotopicMass]
@@ -652,16 +653,29 @@ mkMolecularFormula :: [(ElementSymbol, Int)] -> MolecularFormula
 mkMolecularFormula = MolecularFormula . filterZero . fromList
 
 instance Formula MolecularFormula where
-   renderFormula f = foldMapWithKey renderFoldfunc (getMolecularFormula f)
+   renderFormula f = foldMap renderFoldfunc ((sortElementSymbolMap . getMolecularFormula) f)
    emptyFormula = mkMolecularFormula []
 
 -- Helper function for 'renderFormula'.
-renderFoldfunc :: (Eq b, Num b, Show a, Show b) => a -> b -> String
-renderFoldfunc sym num = show sym ++ if num == 1
-                                         then ""
-                                         else show num
+renderFoldfunc :: (ElementSymbol, Int) -> String
+renderFoldfunc (sym, num) = show sym ++ if num == 1
+                                           then ""
+                                           else show num
+
 -- Use the Hill system for writing molecular formulas. C then H followed by
 -- elements in alphabetical order.
+sortElementSymbolMap :: Map ElementSymbol Int -> [(ElementSymbol, Int)]
+sortElementSymbolMap m = sortBy (hillSystem fst) elementSymbolIntList
+    where
+      elementSymbolIntList = toList m
+      elementSymbols = fst <$> elementSymbolIntList
+      containsC = C `elem` elementSymbols
+      hillSystem f a b = case (f a, f b) of
+        (C, _)   -> LT
+        (_, C)   -> GT
+        (H, b')  -> if containsC then LT else (show . elementName) H `compare` show b'
+        (a', H)  -> if containsC then GT else show a' `compare` (show . elementName) H
+        (a', b') -> show a' `compare` show b'
 
 --------------------------------------------------------------------------------
 -- Condensed formulae
@@ -699,7 +713,7 @@ instance ChemicalMass EmpiricalFormula where
     getElementalComposition (EmpiricalFormula a) = MolecularFormula a
 
 instance Formula EmpiricalFormula where
-   renderFormula f = foldMapWithKey renderFoldfunc (getEmpiricalFormula f)
+   renderFormula f = foldMap renderFoldfunc ((sortElementSymbolMap . getEmpiricalFormula) f)
    emptyFormula = mkEmpiricalFormula []
 
 -- | Smart constructor to make values of type 'EmpiricalFormula'.

@@ -9,6 +9,8 @@ Stability   : Experimental
 This module provides parsers for element symbols as well molecular and condensed
 formulae. In addition, instances of `IsString` are provided.
 -}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE FlexibleInstances #-}
 module Isotope.Parsers (
     -- * Parsers
@@ -16,14 +18,20 @@ module Isotope.Parsers (
     , subFormula
     , molecularFormula
     , condensedFormula
+    , mol
+    , emp
+    , con
     ) where
 
 import Isotope.Base
+import Language.Haskell.TH.Quote
+import Language.Haskell.TH.Lift
 import Text.Megaparsec
 import Text.Megaparsec.String
 import qualified Text.Megaparsec.Lexer as L
 import Data.String
 import Data.List hiding (filter)
+import Data.Map (Map)
 
 -- | Parses an element symbol string.
 elementSymbol :: Parser ElementSymbol
@@ -90,3 +98,40 @@ instance IsString CondensedFormula where
      case parse (condensedFormula <* eof) "" s of
           Left err -> error $ "Could not parse formula: " ++ show err
           Right v  -> v
+
+quoteMolecularFormula s =
+    case parse (condensedFormula <* eof) "" s of
+         Left err -> fail $ "Could not parse formula: " ++ show err
+         Right v  -> lift $ toMolecularFormula v
+
+quoteEmpiricalFormula s =
+    case parse (condensedFormula <* eof) "" s of
+         Left err -> fail $ "Could not parse formula: " ++ show err
+         Right v  -> lift $ toEmpiricalFormula v
+
+quoteCondensedFormula s =
+    case parse (condensedFormula <* eof) "" s of
+         Left err -> error $ "Could not parse formula: " ++ show err
+         Right v  -> lift $ v
+
+mol  :: QuasiQuoter
+mol = QuasiQuoter
+    { quoteExp = quoteMolecularFormula }
+
+emp  :: QuasiQuoter
+emp = QuasiQuoter
+    { quoteExp = quoteEmpiricalFormula }
+
+con  :: QuasiQuoter
+con = QuasiQuoter
+    { quoteExp = quoteCondensedFormula }
+
+$(deriveLift ''MolecularFormula)
+
+$(deriveLift ''EmpiricalFormula)
+
+$(deriveLift ''CondensedFormula)
+
+$(deriveLift ''Map)
+
+$(deriveLift ''ElementSymbol)

@@ -71,8 +71,12 @@ module Isotope (
   , EmpiricalFormula
   , ToEmpiricalFormula(..)
   , mkEmpiricalFormula
+  -- * QuasiQuoter
+  , mol
+  , emp
+  , con
   ) where
 
 import Isotope.Base
-import Isotope.Parsers()
+import Isotope.Parsers
 import Prelude hiding (lookup)

@@ -68,7 +68,7 @@ module Isotope (
   -- * Condensed formulae
   , CondensedFormula(..)
   -- * Empirical formulae
-  , EmpiricalFormula
+  , EmpiricalFormula(..)
   , ToEmpiricalFormula(..)
   , mkEmpiricalFormula
   -- * QuasiQuoter

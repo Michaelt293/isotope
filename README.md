@@ -9,9 +9,11 @@ WARNING: Isotope is currently undergoing major changes in preparation for Hackag
     * [Isotopic, integer, monoisotopic, nominal and average masses](#isotopic-integer-monoisotopic-nominal-and-average-masses)
     * [Element symbols](#element-symbols)
     * [Molecular, condensed and empirical formulae](#molecular-condensed-and-empirical-formulae)
-    * [Conversion between CondensedFormula, MolecularFormula and EmpiricalFormula data types](#Conversion-between-CondensedFormula-MolecularFormula-and-EmpiricalFormula-data-types)
+    * [Molecular, condensed and empirical formula QuasiQuoters](#molecular-condensed-and-empirical-formula-QuasiQuoters)
+    * [Conversion between CondensedFormula, MolecularFormula and EmpiricalFormula data types](#conversion-between-condensedformula-molecularformula-and-empiricalformula-data-types)
+    * [Operators for working with molecular formulae](#operators-for-working-with-molecular-formulae)
     * [ChemicalMass type class](#chemicalmass-type-class)
-    * [Additional functions accepting an ElementSymbol as input](#Additional-functions-accepting-an-ElementSymbol-as-input)
+    * [Additional functions accepting an ElementSymbol as input](#additional-functions-accepting-an-elementsymbol-as-input)
 * [Comparison to other chemistry libraries](#comparison-to-other-chemistry-libraries)
     * [Radium](#radium)
     * [Ouch](#ouch)
@@ -50,30 +52,21 @@ In Isotope, element symbols are represented by the enumeration type, `ElementSym
 
 In the Isotope library, a distinction between molecular, condensed and empirical formulae is made. Molecular formulae contain the total number of atoms for each element of a molecule while condensed formulae give information on the connectivity of atoms within molecules. For example, the molecule trimethylamine has a molecular formula of C3H9N and a condensed formula of N(CH3)3. Here the molecular formula indicates trimethyelamine has a total of 3 carbon atoms, 9 hydrogen atoms and 1 nitrogen whereas the condensed formula indicates trimethylamine has 3 methyl groups bonded to a central nitrogen. Conversely, an empirical formula is the simplest integer ratio for the atoms of a compound. For example, the molecular formula of benzene is C6H6 whereas the empirical formula of benzene is simply CH.
 
-`MolecularFormula`, `CondensedFormula` and `EmpiricalFormula` are instances of `IsString`. Therefore, shorthand notation can be used when working with molecular and empirical formulae in addition to the smart constructors `mkMolecularFormula` and `mkEmpiricalFormula`. The use of molecular, condensed and empirical formulae strings requires the use of the `OverloadedStrings` extension (`:set -XOverloadedStrings` can be added to the `.ghci` file when working in GHCi).
+### Molecular, condensed and empirical formula QuasiQuoters
+
+The QuasiQuoters, `mol`, `con` and `emp`, are provided for `MolecularFormula`, `CondensedFormula` and `EmpiricalFormula` data types, respectively. Therefore, shorthand notation can be used when working with molecular, condensed and empirical formulae. The use of molecular, condensed and empirical formulae QuasiQuoters requires the use of the `QuasiQuotes` language extension (`:set -XQuasiQuotes` can be added to the `.ghci` file when working in GHCi).
 ```haskell
-GHCi> ("CH4" :: MolecularFormula) == mkMolecularFormula [(C,1),(H,4)]
-True
+GHCi> [mol|CH4|]
+MolecularFormula {getMolecularFormula = fromList [(H,4),(C,1)]}
 ```
-If molecular, condensed and empirical formula strings are used in top-level variables, errors will not be detected at compile-time and will result in run-time errors. Therefore, it is preferable to use the constructors `mkMolecularFormula`, `CondensedFormula` and `mkEmpiricalFormula` or to use GHCi to convert strings to values which can then be copied and pasted into source code. When using GHCi, it is possible to set a default type to either `MolecularFormula`, `CondensedFormula` or `EmpiricalFormula` for convenience. This means that explicit type annotations (i.e., `"CH4" :: MolecularFormula`) are not required.
+Importantly, errors in formulae will be detected at compile-time and give informative error messages! (Note the example below is from a GHCi session.)
 ```haskell
-GHCi> default(MolecularFormula)
-GHCi> "CH4"
-ElementSymbolMap {getSymbolMap = fromList [(H,4),(C,1)]}
-```
-The Isotope library comes with three operators for working with molecular formulae; `|+|`, `|-|` and `|*|`. These operators have the same fixity and associativity as `+`, `-` and `*`, respectively. This allows us to the `|+|`, `|-|` and `|*|` operators in an intuitive manner (i.e., like basic arithmetic). For example, we could define the molecule formula of propane in terms of its building blocks; that is, 2 methyl groups and 1 methylene group.
-```haskell
-GHCi> let methyl = "CH3" :: MolecularFormula
-GHCi> let methylene = "CH2" :: MolecularFormula
-GHCi> let propane = 2 |*| methyl |+| methylene
-GHCi> propane
-ElementSymbolMap {getSymbolMap = fromList [(H,8),(C,3)]}
-```
-We could then go one step further and define propene to be propane minus molecular hydrogen.
-```haskell
-GHCi> let propene = propane |-| "H2"
-GHCi> propene
-ElementSymbolMap {getSymbolMap = fromList [(H,6),(C,3)]}
+GHCi> [mol|Ch4|]
+
+<interactive>:4:6:
+    Could not parse formula: 1:2:
+unexpected 'h'
+expecting "Ag", "Al", "Ar", "As", "Au", "Ba", "Be", "Bi", "Br", "Ca", "Cd", "Ce", "Cl", "Co", "Cr", "Cs", "Cu", "Dy", "Er", "Eu", "Fe", "Ga", "Gd", "Ge", "He", "Hf", "Hg", "Ho", "In", "Ir", "Kr", "La", "Li", "Lu", "Mg", "Mn", "Mo", "Na", "Nb", "Nd", "Ne", "Ni", "Os", "Pa", "Pb", "Pd", "Pm", "Pr", "Pt", "Rb", "Re", "Rh", "Ru", "Sb", "Sc", "Se", "Si", "Sm", "Sn", "Sr", "Ta", "Tb", "Tc", "Te", "Th", "Ti", "Tl", "Tm", "Xe", "Yb", "Zn", "Zr", '(', 'B', 'C', 'F', 'H', 'I', 'K', 'N', 'O', 'P', 'S', 'U', 'V', 'W', 'Y', or end of input
 ```
 
 ### Conversion between `CondensedFormula`, `MolecularFormula` and `EmpiricalFormula` data types
@@ -81,16 +74,33 @@ ElementSymbolMap {getSymbolMap = fromList [(H,6),(C,3)]}
 A condensed formula can be converted to a molecular or empirical formula and a molecular formula can be converted to an empirical formula. In Isotope, this functionality is provided by two type classes, `ToMolecularFormula` and `ToEmpiricalFormula`, which contain the methods, `toMolecularFormula` and `toEmpiricalFormula`, respectively.
 
 ```haskell
-GHCi> let dimethylpropane = "CH3(CH3)2CH3" :: CondensedFormula
-GHCi> toMolecularFormula dimethylpropane
-MolecularFormula {getMolecularFormula = fromList [(H,12),(C,4)]}
-GHCi> toEmpiricalFormula dimethylpropane
-EmpiricalFormula {getEmpiricalFormula = fromList [(H,3),(C,1)]}
+GHCi> let butane = [con|CH3(CH2)2CH3|]
+GHCi> toMolecularFormula butane
+MolecularFormula {getMolecularFormula = fromList [(H,10),(C,4)]}
+GHCi> toEmpiricalFormula butane
+EmpiricalFormula {getEmpiricalFormula = fromList [(H,5),(C,2)]}
 ```
-When using condensed, molecular or empirical formula strings, it is possible to this implicitly. For example, the formula "CH3(CH3)2CH3" above could be directly annotated as type `EmpiricalFormula`.
+When using condensed, molecular or empirical formula QuasiQuoters, it is possible to this implicitly. For example, the QuasiQuoter `emp` could be applied to the condensed formula "CH3(CH2)2CH3" used above to yield a value of type `EmpiricalFormula`.
 ```haskell
-GHCi> "CH3(CH2)2CH3" :: EmpiricalFormula
-EmpiricalFormula {getEmpiricalFormula = fromList [(H,3),(C,1)]}
+GHCi> [emp|CH3(CH2)2CH3|]
+EmpiricalFormula {getEmpiricalFormula = fromList [(H,5),(C,2)]}
+```
+
+### Operators for working with molecular formulae
+
+The Isotope library comes with three operators for working with molecular formulae; `|+|`, `|-|` and `|*|`. These operators have the same fixity and associativity as `+`, `-` and `*`, respectively. This allows us to the `|+|`, `|-|` and `|*|` operators in an intuitive manner (i.e., like basic arithmetic). For example, we could define the molecule formula of propane in terms of its building blocks; that is, 2 methyl groups and 1 methylene group.
+```haskell
+GHCi> let methyl = [mol|CH3|]
+GHCi> let methylene = [mol|CH2|]
+GHCi> let propane = 2 |*| methyl |+| methylene
+GHCi> propane
+MolecularFormula {getMolecularFormula = fromList [(H,8),(C,3)]}
+```
+We could then go one step further and define propene to be propane minus molecular hydrogen.
+```haskell
+GHCi> let propene = propane |-| [mol|H2|]
+GHCi> propene
+MolecularFormula {getMolecularFormula = fromList [(H,6),(C,3)]}
 ```
 
 ### `ChemicalMass` type class
@@ -99,9 +109,9 @@ The `ChemicalMass` type class has four methods; `getElementalComposition`, `mono
 ```haskell
 GHCi> nominalMass C
 12
-GHCi> averageMass ("CH4" :: MolecularFormula)
+GHCi> averageMass [mol|CH4|]
 16.042498912958358
-GHCi> monoisotopicMass ("N(CH3)3" :: CondensedFormula)
+GHCi> monoisotopicMass [mol|N(CH3)3|]
 59.073499294499996
 ```
 ### Additional functions accepting an `ElementSymbol` as input

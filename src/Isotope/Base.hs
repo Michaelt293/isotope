@@ -84,7 +84,6 @@ module Isotope.Base (
 import Prelude hiding      (lookup,filter)
 import Data.Map            ( Map
                            , fromList
-                           , foldMapWithKey
                            , unionWith
                            , filter
                            , mapWithKey

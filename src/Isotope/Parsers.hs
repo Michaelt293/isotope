@@ -112,7 +112,7 @@ quoteEmpiricalFormula s =
 quoteCondensedFormula s =
     case parse (condensedFormula <* eof) "" s of
          Left err -> error $ "Could not parse formula: " ++ show err
-         Right v  -> lift $ v
+         Right v  -> lift v
 
 mol  :: QuasiQuoter
 mol = QuasiQuoter

@@ -1,13 +1,13 @@
 {-|
-Module      : Isotopic.Parsers
+Module      : Isotope.Parsers
 Description : Parsers for chemical and condensed formulae.
 Copyright   : Michael Thomas
 License     : GPL-3
 Maintainer  : Michael Thomas <Michaelt293@gmail.com>
 Stability   : Experimental
 
-This module provides parsers for element symbols as well molecular and condensed
-formulae. In addition, instances of `IsString` are provided.
+This module provides parsers for element symbols as well molecular, empirical and
+condensed formulae. In addition, QuasiQuoters are provided.
 -}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
@@ -80,24 +80,6 @@ condensedFormula :: Parser CondensedFormula
 condensedFormula = do
   result <- many (leftMolecularFormula <|> parenFormula)
   return $ CondensedFormula result
-
-instance IsString MolecularFormula where
-    fromString s =
-      case parse (condensedFormula <* eof) "" s of
-           Left err -> error $ "Could not parse formula: " ++ show err
-           Right v  -> toMolecularFormula v
-
-instance IsString EmpiricalFormula where
-   fromString s =
-     case parse (condensedFormula <* eof) "" s of
-          Left err -> error $ "Could not parse formula: " ++ show err
-          Right v  -> toEmpiricalFormula v
-
-instance IsString CondensedFormula where
-   fromString s =
-     case parse (condensedFormula <* eof) "" s of
-          Left err -> error $ "Could not parse formula: " ++ show err
-          Right v  -> v
 
 quoteMolecularFormula s =
     case parse (condensedFormula <* eof) "" s of

@@ -1,5 +1,5 @@
 {-|
-Module      : Isotopic.Base
+Module      : Isotope.Base
 Description : Contains most of the data type declarations used in the Isotope
               library.
 Copyright   : Michael Thomas
@@ -8,13 +8,10 @@ Maintainer  : Michael Thomas <Michaelt293@gmail.com>
 Stability   : Experimental
 
 This module defines the majority of the types used in the Isotope library. A
-large number of type synonyms are provided to improve readability. Of
-particular importance are the 'Isotope', 'Element', 'ElementSymbol' and
-'ElementSymbolMap' types. 'ElementSymbol' is an enumeration type of all the
-element symbols used in the Isotopes library. 'ElementSymbolMap' is a
-polymorphic data type which maps an 'ElementSymbol' to a value of some type.
-An 'ElementSymbolMap' is used in "Isotope.Periodic" to provide a mapping to
-values of type 'Element'.
+large number of type synonyms are provided to improve readability. Of particular
+importance are the 'Isotope', 'Element', 'ElementSymbol', `EmpiricalFormula`,
+`MolecularFormula` and 'CondensedFormula' types. 'ElementSymbol' is an
+enumeration type of all the element symbols used in the Isotopes library.
 -}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}

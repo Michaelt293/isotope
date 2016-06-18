@@ -661,18 +661,18 @@ renderFoldfunc (sym, num) = show sym ++ if num == 1
 -- Use the Hill system for writing molecular formulas. C then H followed by
 -- elements in alphabetical order.
 sortElementSymbolMap :: Map ElementSymbol Int -> [(ElementSymbol, Int)]
-sortElementSymbolMap m = sortBy (hillSystem fst) elementSymbolIntList
-    where
-      elementSymbolIntList = toList m
-      elementSymbols = fst <$> elementSymbolIntList
-      containsC = C `elem` elementSymbols
-      hillSystem f a b = case (f a, f b) of
-        (C, _)   -> LT
-        (_, C)   -> GT
-        (H, b')  -> if containsC then LT else (show . elementName) H `compare` show b'
-        (a', H)  -> if containsC then GT else show a' `compare` (show . elementName) H
-        (a', b') -> show a' `compare` show b'
-
+sortElementSymbolMap m = undefined -- sortBy (hillSystem fst) elementSymbolIntList
+--     where
+--       elementSymbolIntList = toList m
+--       elementSymbols = fst <$> elementSymbolIntList
+--       containsC = C `elem` elementSymbols
+--       hillSystem f a b = case (f a, f b) of
+--         (C, _)   -> LT
+--         (_, C)   -> GT
+--         (H, b')  -> if containsC then LT else (show . elementName) H `compare` show b'
+--         (a', H)  -> if containsC then GT else show a' `compare` (show . elementName) H
+--         (a', b') -> show a' `compare` show b'
+--
 --------------------------------------------------------------------------------
 -- Condensed formulae
 

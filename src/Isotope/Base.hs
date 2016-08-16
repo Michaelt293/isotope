@@ -634,7 +634,7 @@ filterZero :: Map k Int -> Map k Int
 filterZero = filter (/= 0)
 
 instance ChemicalMass MolecularFormula where
-    toElementalComposition = toElementalComposition
+    toElementalComposition (MolecularFormula m) = ElementalComposition m
 
 class (ToEmpiricalFormula a, ChemicalMass a) => ToMolecularFormula a where
     toMolecularFormula :: a -> MolecularFormula

@@ -12,7 +12,7 @@ WARNING: Isotope is currently undergoing major changes in preparation for Hackag
     * [Molecular, condensed and empirical formula QuasiQuoters](#molecular-condensed-and-empirical-formula-QuasiQuoters)
     * [Conversion between CondensedFormula, MolecularFormula and EmpiricalFormula data types](#conversion-between-condensedformula-molecularformula-and-empiricalformula-data-types)
     * [Operators for working with molecular formulae](#operators-for-working-with-molecular-formulae)
-    * [ChemicalMass type class](#chemicalmass-type-class)
+    * [ElementalComposition type class](#ElementalComposition-type-class)
     * [Additional functions accepting an ElementSymbol as input](#additional-functions-accepting-an-elementsymbol-as-input)
 * [Comparison to other chemistry libraries](#comparison-to-other-chemistry-libraries)
     * [Radium](#radium)
@@ -103,9 +103,9 @@ GHCi> propene
 MolecularFormula {getMolecularFormula = fromList [(H,6),(C,3)]}
 ```
 
-### `ChemicalMass` type class
+### `ElementalComposition` type class
 
-The `ChemicalMass` type class has four methods; `getElementalComposition`, `monoisotopicMass`, `nominalMass` and `averageMass`, where `getElementalComposition` is the minimal complete definition. `ElementSymbol`,`MolecularFormula` and `CondensedFormula` are instances of `ChemicalMass`. This provides a uniform approach to working with elements, molecular formulae and condensed formulae.
+The `ElementalComposition` type class has four methods; `toElementalComposition`, `monoisotopicMass`, `nominalMass` and `averageMass`, where `toElementalComposition` is the minimal complete definition. `ElementSymbol`,`MolecularFormula` and `CondensedFormula` are instances of `ElementalComposition`. This provides a uniform approach to working with elements, molecular formulae and condensed formulae.
 ```haskell
 GHCi> nominalMass C
 12

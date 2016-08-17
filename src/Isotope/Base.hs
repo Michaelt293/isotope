@@ -636,7 +636,7 @@ filterZero = filter (/= 0)
 instance ChemicalMass MolecularFormula where
     toElementalComposition (MolecularFormula m) = ElementalComposition m
 
-class (ToEmpiricalFormula a, ChemicalMass a) => ToMolecularFormula a where
+class (ChemicalMass a) => ToMolecularFormula a where
     toMolecularFormula :: a -> MolecularFormula
 
 -- | Type class with two methods, 'renderFormula' and 'emptyFormula'. The

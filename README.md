@@ -12,7 +12,7 @@ WARNING: Isotope is currently undergoing major changes in preparation for Hackag
     * [Molecular, condensed and empirical formula QuasiQuoters](#molecular-condensed-and-empirical-formula-QuasiQuoters)
     * [Conversion between CondensedFormula, MolecularFormula and EmpiricalFormula data types](#conversion-between-condensedformula-molecularformula-and-empiricalformula-data-types)
     * [Operators for working with molecular formulae](#operators-for-working-with-molecular-formulae)
-    * [ElementalComposition type class](#ElementalComposition-type-class)
+    * [ChemicalMass type class](#ElementalComposition-type-class)
     * [Additional functions accepting an ElementSymbol as input](#additional-functions-accepting-an-elementsymbol-as-input)
 * [Comparison to other chemistry libraries](#comparison-to-other-chemistry-libraries)
     * [Radium](#radium)

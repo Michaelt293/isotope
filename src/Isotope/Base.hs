@@ -60,7 +60,7 @@ module Isotope.Base (
     , isotopicMasses
     , integerMasses
     , isotopicAbundances
-    -- 'ChemicalMass' type class
+    -- 'ElementalComposition' type class
     , ChemicalMass(..)
     -- Molecular formulae
     , MolecularFormula(..)
@@ -511,7 +511,7 @@ elements = fromList
   ]
 
 instance ChemicalMass ElementSymbol where
-    getElementalComposition x = MolecularFormula . fromList $ [(x, 1)]
+    toElementalComposition x = ElementalComposition . fromList $ [(x, 1)]
 
 --------------------------------------------------------------------------------
 -- Functions taking an 'elementSymbol' as input
@@ -562,25 +562,25 @@ isotopicAbundances :: ElementSymbol -> [IsotopicAbundance]
 isotopicAbundances = elementIsotopicAbundances . findElement
 
 --------------------------------------------------------------------------------
--- 'ChemicalMass' type class
+-- 'ElementalComposition' type class
 
--- | Class containing four methods; 'getElementalComposition',
+-- | Class containing four methods; 'toElementalComposition',
 -- 'monoisotopicMass', 'nominalMass' and 'averageMass'.
 class ChemicalMass a where
-     getElementalComposition :: a -> ChemicalComposition
-     monoisotopicMass        :: a -> MonoisotopicMass
-     nominalMass             :: a -> NominalMass
-     averageMass             :: a -> AverageMass
+     toElementalComposition :: a -> ElementalComposition
+     monoisotopicMass       :: a -> MonoisotopicMass
+     nominalMass            :: a -> NominalMass
+     averageMass            :: a -> AverageMass
      monoisotopicMass = getFormulaSum elementMonoisotopicMass
      nominalMass      = getFormulaSum elementNominalMass
      averageMass      = getFormulaSum elementAverageMass
-     {-# MINIMAL (getElementalComposition) #-}
+     {-# MINIMAL (toElementalComposition) #-}
 
 -- Helper function for the calculating monoistopic masses, average mass and
 -- nominal masses for molecular formulae.
 getFormulaSum :: (Num a, ChemicalMass b) => (Element -> a) -> b -> a
 getFormulaSum f m = sum $
-    mapWithKey mapFunc (getMolecularFormula (getElementalComposition m))
+    mapWithKey mapFunc (getComposition (toElementalComposition m))
   where mapFunc k v = (f . findElement) k * fromIntegral v
 
 --------------------------------------------------------------------------------
@@ -591,10 +591,11 @@ newtype MolecularFormula = MolecularFormula {
     getMolecularFormula :: Map ElementSymbol Int }
         deriving (Show, Read, Eq, Ord)
 
--- | 'ChemicalComposition' is a type synonym of 'MolecularFormula'. It is
--- provided since 'EmpiricalFormula' can be thought of as a chemical composition
--- but is not a molecular formula.
-type ChemicalComposition = MolecularFormula
+-- | Provided since 'EmpiricalFormula' can be thought of as a chemical
+-- composition but is not a molecular formula.
+newtype ElementalComposition = ElementalComposition  {
+    getComposition :: Map ElementSymbol Int }
+        deriving (Show, Read, Eq, Ord)
 
 instance Monoid MolecularFormula where
    mempty = emptyFormula
@@ -633,9 +634,9 @@ filterZero :: Map k Int -> Map k Int
 filterZero = filter (/= 0)
 
 instance ChemicalMass MolecularFormula where
-    getElementalComposition = id
+    toElementalComposition (MolecularFormula m) = ElementalComposition m
 
-class ToMolecularFormula a where
+class (ChemicalMass a) => ToMolecularFormula a where
     toMolecularFormula :: a -> MolecularFormula
 
 -- | Type class with two methods, 'renderFormula' and 'emptyFormula'. The
@@ -682,7 +683,7 @@ newtype CondensedFormula = CondensedFormula {
         deriving (Show, Read, Eq, Ord)
 
 instance ChemicalMass CondensedFormula where
-    getElementalComposition = toMolecularFormula
+    toElementalComposition = toElementalComposition
 
 instance ToMolecularFormula CondensedFormula where
     toMolecularFormula c = foldMap foldFunc (getCondensedFormula c)
@@ -706,7 +707,7 @@ newtype EmpiricalFormula = EmpiricalFormula {
         deriving (Show, Read, Eq, Ord)
 
 instance ChemicalMass EmpiricalFormula where
-    getElementalComposition (EmpiricalFormula a) = MolecularFormula a
+    toElementalComposition (EmpiricalFormula a) = ElementalComposition a
 
 instance Formula EmpiricalFormula where
    renderFormula f = foldMap renderFoldfunc ((sortElementSymbolMap . getEmpiricalFormula) f)
@@ -718,7 +719,7 @@ mkEmpiricalFormula = EmpiricalFormula . filterZero . fromList
 
 -- | Type class with a single method, 'toEmpiricalFormula', which converts a
 -- chemical data type to `EmpiricalFormula`.
-class ToEmpiricalFormula a where
+class ChemicalMass a => ToEmpiricalFormula a where
   toEmpiricalFormula :: a -> EmpiricalFormula
 
 instance ToEmpiricalFormula MolecularFormula where

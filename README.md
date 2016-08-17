@@ -103,9 +103,9 @@ GHCi> propene
 MolecularFormula {getMolecularFormula = fromList [(H,6),(C,3)]}
 ```
 
-### `ElementalComposition` type class
+### `ChemicalMass` type class
 
-The `ElementalComposition` type class has four methods; `toElementalComposition`, `monoisotopicMass`, `nominalMass` and `averageMass`, where `toElementalComposition` is the minimal complete definition. `ElementSymbol`,`MolecularFormula` and `CondensedFormula` are instances of `ElementalComposition`. This provides a uniform approach to working with elements, molecular formulae and condensed formulae.
+The `ChemicalMass` type class has four methods; `toElementalComposition`, `monoisotopicMass`, `nominalMass` and `averageMass`, where `toElementalComposition` is the minimal complete definition. `ElementSymbol`, `EmpiricalFormula`, `MolecularFormula` and `CondensedFormula` are instances of `ChemicalMass`. This provides a uniform approach to working with elements, empirical formulae, molecular formulae and condensed formulae.
 ```haskell
 GHCi> nominalMass C
 12

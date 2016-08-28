@@ -165,11 +165,11 @@ data Element = Element { atomicNumber' :: AtomicNumber
 data ElementSymbol = H  | He | Li | Be | B  | C  | N  | O  | F  | Ne | Na | Mg |
                      Al | Si | P  | S  | Cl | Ar | K  | Ca | Sc | Ti | V  | Cr |
                      Mn | Fe | Co | Ni | Cu | Zn | Ga | Ge | As | Se | Br | Kr |
-                     Rb | Sr | Y  | Zr | Nb | Mo | Tc | Ru | Rh | Pd | Ag | Cd |
-                     In | Sn | Sb | Te | I  | Xe | Cs | Ba | La | Ce | Pr | Nd |
-                     Pm | Sm | Eu | Gd | Tb | Dy | Ho | Er | Tm | Yb | Lu | Hf |
-                     Ta | W  | Re | Os | Ir | Pt | Au | Hg | Tl | Pb | Bi | Th |
-                     Pa | U  deriving (Show, Read, Eq, Ord, Enum, Bounded)
+                     Rb | Sr | Y  | Zr | Nb | Mo | Ru | Rh | Pd | Ag | Cd | In |
+                     Sn | Sb | Te | I  | Xe | Cs | Ba | La | Ce | Pr | Nd | Sm |
+                     Eu | Gd | Tb | Dy | Ho | Er | Tm | Yb | Lu | Hf | Ta | W  |
+                     Re | Os | Ir | Pt | Au | Hg | Tl | Pb | Bi | Th | Pa | U
+                     deriving (Show, Read, Eq, Ord, Enum, Bounded)
 
 -- | List containing all element symbols.
 elementSymbolList :: [ElementSymbol]
@@ -337,7 +337,6 @@ elements = fromList
                                    , Isotope (42, 55)   96.90601812    0.0960
                                    , Isotope (42, 56)   97.90540482    0.2439
                                    , Isotope (42, 58)   99.9074718     0.0982 ])
-  , (Tc, Element 43 "technetium"   [ Isotope (43, 55)   97.9072124     0 ])
   , (Ru, Element 44 "ruthenium"    [ Isotope (44, 52)   95.90759025    0.0554
                                    , Isotope (44, 54)   97.9052868     0.0187
                                    , Isotope (44, 55)   98.9059341     0.1276
@@ -416,7 +415,6 @@ elements = fromList
                                    , Isotope (60, 86)   145.9131226    0.17189
                                    , Isotope (60, 88)   147.9168993    0.05756
                                    , Isotope (60, 90)   149.9209022    0.05638 ])
-  , (Pm, Element 61 "promethium"   [ Isotope (61, 84)   144.9127559    0 ])
   , (Sm, Element 62 "samarium"     [ Isotope (62, 82)   143.9120065    0.0307
                                    , Isotope (62, 83)   146.9149044    0.1499
                                    , Isotope (62, 84)   147.9148292    0.1124

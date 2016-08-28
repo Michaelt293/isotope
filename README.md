@@ -3,8 +3,6 @@
 
 ![alt tag](https://github.com/Michaelt293/isotope/blob/master/isotope_jpeg.jpg)
 
-WARNING: Isotope is currently undergoing major changes in preparation for Hackage.
-
 * [Design](#design)
     * [Isotopic, integer, monoisotopic, nominal and average masses](#isotopic-integer-monoisotopic-nominal-and-average-masses)
     * [Element symbols](#element-symbols)

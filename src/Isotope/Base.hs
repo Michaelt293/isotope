@@ -60,8 +60,10 @@ module Isotope.Base (
     , isotopicMasses
     , integerMasses
     , isotopicAbundances
-    -- 'ElementalComposition' type class
+    -- 'ChemicalMass' type class
     , ChemicalMass(..)
+    -- Elemental composition
+    , ElementalComposition(..)
     -- Molecular formulae
     , MolecularFormula(..)
     , (|+|)

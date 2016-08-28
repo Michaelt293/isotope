@@ -55,8 +55,10 @@ module Isotope (
   , isotopicMasses
   , integerMasses
   , isotopicAbundances
-  -- * 'ElementalComposition' type class
+  -- * 'ChemicalMass' type class
   , ChemicalMass(..)
+  -- * Elemental composition
+  , ElementalComposition(..)
   -- * Molecular formulae
   , MolecularFormula(..)
   , (|+|)

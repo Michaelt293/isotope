@@ -72,9 +72,8 @@ spec = do
     describe "isotopicAbundances" $ do
       it "calling function with C should return [0.9893, 0.0107]" $
         isotopicAbundances C `shouldBe` [0.9893, 0.0107]
-      it "sum of isotopic abundances for an element should equal 0 or 1" $
-        (\sym -> sumIsotopicAbundance sym == 0
-                     || withinTolerance (sumIsotopicAbundance sym) 1 0.0001) <$> elementSymbolList `shouldSatisfy` and
+      it "sum of isotopic abundances for an element should equal 1" $
+        (\sym -> withinTolerance (sumIsotopicAbundance sym) 1 0.0001) <$> elementSymbolList `shouldSatisfy` and
 
     describe "Monoid instance for MolecularFormula" $ do
       it "associativity" $ property $

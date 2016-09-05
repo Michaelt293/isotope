@@ -1,7 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE OverlappingInstances #-}
 module Isotope.BaseSpec (spec) where
 
 import Isotope
@@ -18,7 +17,7 @@ spec = do
         ((<= 2) . length . show) <$> elementSymbolList `shouldSatisfy` and
       it "second character of a two character ElementSymbol should not be upper case" $
         (\x -> length x /= 2 || (isLower . last) x) . show <$> elementSymbolList `shouldSatisfy` and
-    describe "lookupElement" $ do
+    describe "lookupElement" $
       it "should not contain duplicate elements" $
         lookupElement <$> elementSymbolList `shouldSatisfy` allUnique
     describe "elementName" $ do
@@ -35,27 +34,27 @@ spec = do
       it "should not have duplicated atomic numbers" $
         atomicNumber <$> elementSymbolList `shouldSatisfy` allUnique
 
-    describe "isotopes" $ do
+    describe "isotopes" $
       it "should not have duplicate isotopes" $
         isotopes <$> elementSymbolList `shouldSatisfy` allUnique
 
-    describe "mostAbundantIsotope" $ do
+    describe "mostAbundantIsotope" $
       it "C should be C12 (six protons and six neutrons)" $
         (nucleons . mostAbundantIsotope) C `shouldBe` (6, 6)
 
-    describe "selectIsotope" $ do
+    describe "selectIsotope" $
       it "calling fuction with the arguments C and 12 should select C12" $
         nucleons (selectIsotope C 12) `shouldBe` (6, 6)
 
-    describe "monoisotopicMass" $ do
+    describe "monoisotopicMass" $
       it "calling function with C should be 12.0" $
         monoisotopicMass C `shouldBe` 12.0
 
-    describe "nominalMass" $ do
+    describe "nominalMass" $
       it "calling function with C should return 12" $
         nominalMass C `shouldBe` 12
 
-    describe "isotopicMasses" $ do
+    describe "isotopicMasses" $
       it "calling function with H should return a list containing 1.007... and 2.014...." $
         isotopicMasses H `shouldBe` [1.00782503223, 2.01410177812]
 
@@ -65,7 +64,7 @@ spec = do
       it "proton number should be equal to atomic number" $
         all protonNumEqAtomicNum elementSymbolList
 
-    describe "averageAtomicMass" $ do
+    describe "averageAtomicMass" $
       it "calling function with C should return 12.0107" $
         withinTolerance (averageMass C) 12.0107 0.0001 `shouldBe` True
 
@@ -81,7 +80,7 @@ spec = do
       it "identity element" $ property $
           \a -> a |+| emptyFormula == a
 
-    describe "Addition of molecular formulae is commutative" $ do
+    describe "Addition of molecular formulae is commutative" $
       it "commutative" $ property $
         \a b -> a |+| b == b |+| a
 
@@ -123,13 +122,16 @@ sumIsotopicAbundance = sum . isotopicAbundances
 instance Arbitrary ElementSymbol where
     arbitrary = oneof $ return <$> elementSymbolList
 
-instance Arbitrary (ElementSymbol, Int) where
-    arbitrary = do
-      elemSym <- arbitrary :: Gen ElementSymbol
-      n <- choose (1,100)
-      return (elemSym, n)
+elemSymIntPairGen :: Gen (ElementSymbol, Int)
+elemSymIntPairGen = do
+    elemSym <- arbitrary
+    n <- choose (1,100)
+    return (elemSym, n)
+
+elemSymIntPairListGen :: Gen [(ElementSymbol, Int)]
+elemSymIntPairListGen = listOf elemSymIntPairGen
 
 instance Arbitrary MolecularFormula where
     arbitrary = do
-      symNums <- arbitrary :: Gen [(ElementSymbol, Int)]
-      return $ MolecularFormula . fromList $ symNums
+      xs <- elemSymIntPairListGen
+      return $ MolecularFormula . fromList $ xs

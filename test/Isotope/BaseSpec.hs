@@ -1,6 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
 module Isotope.BaseSpec (spec) where
 
 import Isotope
@@ -17,9 +16,11 @@ spec = do
         ((<= 2) . length . show) <$> elementSymbolList `shouldSatisfy` and
       it "second character of a two character ElementSymbol should not be upper case" $
         (\x -> length x /= 2 || (isLower . last) x) . show <$> elementSymbolList `shouldSatisfy` and
+
     describe "lookupElement" $
       it "should not contain duplicate elements" $
         lookupElement <$> elementSymbolList `shouldSatisfy` allUnique
+
     describe "elementName" $ do
       it "should not be an empty string" $
         elementName <$> elementSymbolList `shouldSatisfy` notElem ""
@@ -77,8 +78,10 @@ spec = do
     describe "Monoid instance for MolecularFormula" $ do
       it "associativity" $ property $
           \a b c -> (a |+| b) |+| c == a |+| (b |+| c)
-      it "identity element" $ property $
+      it "right identity" $ property $
           \a -> a |+| emptyFormula == a
+      it "left identity" $ property $
+          \a -> emptyFormula |+| a == a
 
     describe "Addition of molecular formulae is commutative" $
       it "commutative" $ property $

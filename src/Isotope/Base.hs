@@ -683,7 +683,7 @@ newtype CondensedFormula = CondensedFormula {
         deriving (Show, Read, Eq, Ord)
 
 instance ChemicalMass CondensedFormula where
-    toElementalComposition = toElementalComposition
+    toElementalComposition = ElementalComposition . getMolecularFormula . toMolecularFormula
 
 instance ToMolecularFormula CondensedFormula where
     toMolecularFormula c = foldMap foldFunc (getCondensedFormula c)

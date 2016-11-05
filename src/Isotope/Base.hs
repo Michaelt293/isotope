@@ -649,6 +649,10 @@ class Formula a where
 mkMolecularFormula :: [(ElementSymbol, Int)] -> MolecularFormula
 mkMolecularFormula = MolecularFormula . filterZero . fromList
 
+-- | Smart constructor to make values of type 'ElementalComposition'.
+mkElementalComposition :: [(ElementSymbol, Int)] -> ElementalComposition
+mkElementalComposition = ElementalComposition . filterZero . fromList
+
 instance Formula MolecularFormula where
    renderFormula f = foldMap renderFoldfunc ((sortElementSymbolMap . getMolecularFormula) f)
    emptyFormula = mkMolecularFormula []

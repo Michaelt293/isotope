@@ -70,6 +70,7 @@ module Isotope.Base (
     , (|-|)
     , (|*|)
     , mkMolecularFormula
+    , mkElementalComposition
     , Formula(..)
     , ToMolecularFormula(..)
     -- Condensed formulae

@@ -65,6 +65,7 @@ module Isotope (
   , (|-|)
   , (|*|)
   , mkMolecularFormula
+  , mkElementalComposition
   , Formula(..)
   , ToMolecularFormula(..)
   -- * Condensed formulae

@@ -7,15 +7,15 @@ import Test.Hspec
 import Test.QuickCheck
 import Data.Char
 import Data.List
-import Data.Map (Map, fromList)
 
 spec :: Spec
 spec = do
     describe "ElementSymbol" $ do
       it "should not have more than two characters" $
         ((<= 2) . length . show) <$> elementSymbolList `shouldSatisfy` and
-      it "second character of a two character ElementSymbol should not be upper case" $
-        (\x -> length x /= 2 || (isLower . last) x) . show <$> elementSymbolList `shouldSatisfy` and
+      it "second character of an ElementSymbol should not be upper case" $
+        (\x -> length x /= 2 || (isLower . last) x) . show <$>
+        elementSymbolList `shouldSatisfy` and
 
     describe "lookupElement" $
       it "should not contain duplicate elements" $
@@ -31,7 +31,8 @@ spec = do
 
     describe "atomicNumber" $ do
       it "should be between 1 and 92" $
-        (\x -> x >= 1 && x <= 92) . atomicNumber <$> elementSymbolList `shouldSatisfy` and
+        (\x -> x >= 1 && x <= 92) . atomicNumber <$>
+        elementSymbolList `shouldSatisfy` and
       it "should not have duplicated atomic numbers" $
         atomicNumber <$> elementSymbolList `shouldSatisfy` allUnique
 
@@ -56,7 +57,7 @@ spec = do
         nominalMass C `shouldBe` 12
 
     describe "isotopicMasses" $
-      it "calling function with H should return a list containing 1.007... and 2.014...." $
+      it "H should return a list containing 1.007... and 2.014...." $
         isotopicMasses H `shouldBe` [1.00782503223, 2.01410177812]
 
     describe "integerMasses" $ do
@@ -65,7 +66,7 @@ spec = do
       it "proton number should be equal to atomic number" $
         all protonNumEqAtomicNum elementSymbolList
 
-    describe "averageAtomicMass" $
+    describe "averageMass" $
       it "calling function with C should return 12.0107" $
         withinTolerance (averageMass C) 12.0107 0.0001 `shouldBe` True
 
@@ -73,7 +74,62 @@ spec = do
       it "calling function with C should return [0.9893, 0.0107]" $
         isotopicAbundances C `shouldBe` [0.9893, 0.0107]
       it "sum of isotopic abundances for an element should equal 1" $
-        (\sym -> withinTolerance (sumIsotopicAbundance sym) 1 0.0001) <$> elementSymbolList `shouldSatisfy` and
+        (\sym -> withinTolerance ((sum . isotopicAbundances) sym) 1 0.0001) <$>
+        elementSymbolList `shouldSatisfy` and
+
+    describe "renderFormula for ElementalComposition" $ do
+      it "[ele|C6H6O|] should be \"C6H6O\"" $
+        renderFormula [ele|C6H6O|] `shouldBe` "C6H6O"
+      it "[ele|CCl4|] should be \"CCl4\"" $
+        renderFormula [ele|CCl4|] `shouldBe` "CCl4"
+      it "[ele|H2O4S|] should be \"H2O4S\"" $
+        renderFormula [ele|H2O4S|] `shouldBe` "H2O4S"
+
+    describe "renderFormula for MolecularFormula" $ do
+      it "[mol|C6H6O|] should be \"C6H6O\"" $
+        renderFormula [mol|C6H6O|] `shouldBe` "C6H6O"
+      it "[mol|CCl4|] should be \"CCl4\"" $
+        renderFormula [mol|CCl4|] `shouldBe` "CCl4"
+      it "[mol|H2O4S|] should be \"H2O4S\"" $
+        renderFormula [mol|H2O4S|] `shouldBe` "H2O4S"
+
+    describe "renderFormula for CondensedFormula" $ do
+      it "[con|C6H6O|] should be \"C6H6O\"" $
+        renderFormula [con|C6H6O|] `shouldBe` "C6H6O"
+      it "[con|N(CH3)3|] should be \"N(CH3)3\"" $
+        renderFormula [con|N(CH3)3|] `shouldBe` "N(CH3)3"
+      it "[con|C6H5OH|] should be \"C6H5OH\"" $
+        renderFormula [con|C6H5OH|] `shouldBe` "C6H5OH"
+
+    describe "renderFormula for EmpiricalFormula" $ do
+      it "[emp|C6H6O|] should be \"C6H6O\"" $
+        renderFormula [emp|C6H6O|] `shouldBe` "C6H6O"
+      it "[emp|CCl4|] should be \"CCl4\"" $
+        renderFormula [emp|CCl4|] `shouldBe` "CCl4"
+      it "[emp|H2O4S|] should be \"H2O4S\"" $
+        renderFormula [emp|H2O4S|] `shouldBe` "H2O4S"
+
+    describe "ToElementalComposition - ElementalComposition instance" $ do
+      it "toElementalComposition" $ property $
+        \ec -> toElementalComposition ec == (ec :: ElementalComposition)
+      it "monoisotopic mass of ethanol" $
+        withinTolerance (monoisotopicMass [ele|C2H6O|]) 46.04186 0.0001
+        `shouldBe` True
+      it "average mass of ethanol" $
+        withinTolerance (averageMass [ele|C2H6O|]) 46.06844 0.0001
+        `shouldBe` True
+      it "nominalMass mass of ethanol" $
+        nominalMass [ele|C2H6O|] `shouldBe` 46
+
+    describe "mkElementalComposition" $ do
+      it "zero is filtered out" $
+        mkElementalComposition [(C, 0), (H, 0), (O, 0)] `shouldBe` emptyFormula
+      it "should give the correct formula" $
+        mkElementalComposition [(C, 2), (H, 6), (O, 1)] `shouldBe` [ele|C2H6O|]
+
+    describe "ToElementalComposition - ElementSymbol instance" $
+      it "monoisotopicMass" $ property $
+        \sym -> monoisotopicMass sym == monoisotopicMass (mkElementalComposition [(sym, 1)])
 
     describe "Monoid instance for MolecularFormula" $ do
       it "associativity" $ property $
@@ -95,20 +151,77 @@ spec = do
       it "a |+| a == 2 |*| a" $ property $
         \a -> a |+| a == 2 |*| a
 
-    describe "toEmpiricalFormula" $ do
-      it "Empty MolecularFormula should return an empty EmpiricalFormula" $
-        toEmpiricalFormula (emptyFormula :: MolecularFormula) `shouldBe` mkEmpiricalFormula []
-      it "\"C6H6\" should be \"CH\"" $
+    describe "ToElementalComposition - MolecularFormula instance" $ do
+      it "[mol|C2H6O|] should be [ele|C2H6O|]" $
+        toElementalComposition [mol|C2H6O|] `shouldBe` [ele|C2H6O|]
+      it "empty MolecularFormula should return an empty ElementalComposition" $
+        toElementalComposition (emptyFormula :: ElementalComposition) `shouldBe`
+        mkElementalComposition []
+
+    describe "Monoid instance for CondensedFormula" $ do
+      it "associativity" $ property $
+          \a b c -> (a `mappend` b) `mappend` c ==
+                     a `mappend` (b `mappend` c :: CondensedFormula)
+      it "right identity" $ property $
+          \a -> (a :: CondensedFormula) `mappend` mempty == a
+      it "left identity" $ property $
+          \a -> emptyFormula `mappend` (a :: CondensedFormula) == a
+
+    describe "ToElementalComposition - CondensedFormula instance" $ do
+      it "empty CondensedFormula should return an empty ElementalComposition" $
+        toElementalComposition (emptyFormula :: CondensedFormula) `shouldBe`
+        [ele||]
+      it "[con|N(CH3)3|] should be [ele|C3NH9|]" $
+        toElementalComposition [con|N(CH3)3|] `shouldBe` [ele|C3NH9|]
+
+    describe "ToMolecularFormula - CondensedFormula instance" $ do
+      it "empty CondensedFormula should return an empty MolecularFormula" $
+        toMolecularFormula (emptyFormula :: CondensedFormula) `shouldBe`
+        mkMolecularFormula []
+      it "[mol|C6H6|] should be [emp|CH|]" $
+        toMolecularFormula [con|N(CH3)3|] `shouldBe` [mol|C3NH9|]
+
+    describe "mkEmpiricalFormula" $ do
+      it "zero is filtered out" $
+        mkEmpiricalFormula [(C, 0), (H, 0), (O, 0)] `shouldBe` emptyFormula
+      it "should give the correct formula" $
+        mkEmpiricalFormula [(C, 6), (H, 6)] `shouldBe` [emp|CH|]
+
+    describe "ToEmpiricalFormula - ElementalComposition instance" $ do
+      it "empty ElementalComposition should return an empty EmpiricalFormula" $
+        toEmpiricalFormula (emptyFormula :: ElementalComposition) `shouldBe`
+        mkEmpiricalFormula []
+      it "[ele|C6H6|] should be [emp|CH|]" $
+        toEmpiricalFormula [ele|C6H6|] `shouldBe` [emp|CH|]
+
+    describe "ToEmpiricalFormula - MolecularFormula instance" $ do
+      it "empty MolecularFormula should return an empty EmpiricalFormula" $
+        toEmpiricalFormula (emptyFormula :: MolecularFormula) `shouldBe`
+        mkEmpiricalFormula []
+      it "[mol|C6H6|] should be [emp|CH|]" $
         toEmpiricalFormula [mol|C6H6|] `shouldBe` [emp|CH|]
 
-    describe "renderFormula" $ do
-      it "\"C6H6O\" should be \"C6H6O\"" $
-        renderFormula [mol|C6H6O|] `shouldBe` "C6H6O"
-      it "\"CCl4\" should be \"CCl4\"" $
-        renderFormula [mol|CCl4|] `shouldBe` "CCl4"
-      it "\"H2O4S\" should be \"H2O4S\"" $
-        renderFormula [mol|H2O4S|] `shouldBe` "H2O4S"
+    describe "ToEmpiricalFormula - CondensedFormula instance" $ do
+      it "empty CondensedFormula should return an empty EmpiricalFormula" $
+        toEmpiricalFormula (emptyFormula :: CondensedFormula) `shouldBe`
+        mkEmpiricalFormula []
+      it "[con|C6H6|] should be [emp|CH|]" $
+        toEmpiricalFormula [con|C6H6|] `shouldBe` [emp|CH|]
 
+    describe "ToElementalComposition - EmpiricalFormula instance" $ do
+      it "empty EmpiricalFormula should return an empty EmpiricalFormula" $
+        toElementalComposition (emptyFormula :: EmpiricalFormula) `shouldBe`
+        mkElementalComposition []
+      it "[emp|CH|] should be [ele|CH|]" $
+        toElementalComposition [emp|CH|] `shouldBe` [ele|CH|]
+
+    describe "Laws for ElementalComposition, MolecularFormula, EmpiricalFormula and CondensedFormula data types" $ do
+      it "applying toEmpiricalFormula to a CondensedFormula should give the same result as applying toMolecularFormula compose toEmpiricalFormula" $ property $
+        \c -> toEmpiricalFormula c == (toEmpiricalFormula . toMolecularFormula) (c :: CondensedFormula)
+      it "applying toElementalComposition to a CondensedFormula should give the same result as applying toMolecularFormula compose toElementalComposition" $ property $
+        \c -> toElementalComposition c == (toElementalComposition . toMolecularFormula) (c :: CondensedFormula)
+      it "applying toElementalComposition compose toEmpiricalFormula to an EmpiricalFormula should return the same EmpiricalFormula" $ property $
+        \e -> (toEmpiricalFormula . toElementalComposition) e == (e :: EmpiricalFormula)
 
 allUnique :: (Eq a) => [a] -> Bool
 allUnique l = l == nub l
@@ -117,13 +230,8 @@ withinTolerance :: (Num a, Ord a) => a -> a -> a -> Bool
 withinTolerance n1 n2 err = abs (n1 - n2) < err
 
 protonNumEqAtomicNum :: ElementSymbol -> Bool
-protonNumEqAtomicNum sym = and $ (== atomicNumber sym) . fst . nucleons <$> isotopes sym
-
-sumIsotopicAbundance :: ElementSymbol -> IsotopicAbundance
-sumIsotopicAbundance = sum . isotopicAbundances
-
-instance Arbitrary ElementSymbol where
-    arbitrary = oneof $ return <$> elementSymbolList
+protonNumEqAtomicNum sym =
+  and $ (== atomicNumber sym) . fst . nucleons <$> isotopes sym
 
 elemSymIntPairGen :: Gen (ElementSymbol, Int)
 elemSymIntPairGen = do
@@ -134,7 +242,27 @@ elemSymIntPairGen = do
 elemSymIntPairListGen :: Gen [(ElementSymbol, Int)]
 elemSymIntPairListGen = listOf elemSymIntPairGen
 
+leftCondensedFormulaGen :: Gen (Either MolecularFormula ([MolecularFormula], Int))
+leftCondensedFormulaGen = Left <$> arbitrary
+
+rightCondensedFormulaGen :: Gen (Either MolecularFormula ([MolecularFormula], Int))
+rightCondensedFormulaGen = do
+  molecularFormulaList <- listOf (arbitrary :: Gen MolecularFormula)
+  n <- choose (1, 4)
+  return $ Right (molecularFormulaList, n)
+
+instance Arbitrary ElementSymbol where
+    arbitrary = oneof $ return <$> elementSymbolList
+
+instance Arbitrary ElementalComposition where
+  arbitrary = mkElementalComposition <$> elemSymIntPairListGen
+
 instance Arbitrary MolecularFormula where
-    arbitrary = do
-      xs <- elemSymIntPairListGen
-      return $ MolecularFormula . fromList $ xs
+  arbitrary = mkMolecularFormula <$> elemSymIntPairListGen
+
+instance Arbitrary CondensedFormula where
+  arbitrary = CondensedFormula <$>
+    listOf (oneof [leftCondensedFormulaGen, rightCondensedFormulaGen])
+
+instance Arbitrary EmpiricalFormula where
+  arbitrary = mkEmpiricalFormula <$> elemSymIntPairListGen

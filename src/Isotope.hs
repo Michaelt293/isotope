@@ -55,29 +55,31 @@ module Isotope (
   , isotopicMasses
   , integerMasses
   , isotopicAbundances
-  -- * 'ChemicalMass' type class
-  , ChemicalMass(..)
+  -- * Formula type class
+  , Formula(..)
   -- * Elemental composition
   , ElementalComposition(..)
+  , ToElementalComposition(..)
+  , mkElementalComposition
   -- * Molecular formulae
   , MolecularFormula(..)
+  , ToMolecularFormula(..)
   , (|+|)
   , (|-|)
   , (|*|)
   , mkMolecularFormula
-  , mkElementalComposition
-  , Formula(..)
-  , ToMolecularFormula(..)
   -- * Condensed formulae
   , CondensedFormula(..)
+  , ToCondensedFormuala(..)
   -- * Empirical formulae
   , EmpiricalFormula(..)
   , ToEmpiricalFormula(..)
   , mkEmpiricalFormula
-  -- * QuasiQuoter
+  -- * QuasiQuoters
+  , ele
   , mol
-  , emp
   , con
+  , emp
   ) where
 
 import Isotope.Base

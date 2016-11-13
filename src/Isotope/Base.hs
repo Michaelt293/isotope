@@ -9,9 +9,10 @@ Stability   : Experimental
 
 This module defines the majority of the types used in the Isotope library. A
 large number of type synonyms are provided to improve readability. Of particular
-importance are the 'Isotope', 'Element', 'ElementSymbol', `EmpiricalFormula`,
-`MolecularFormula` and 'CondensedFormula' types. 'ElementSymbol' is an
-enumeration type of all the element symbols used in the Isotopes library.
+importance are the 'Isotope', 'Element', 'ElementSymbol', `ElementalComposition`,
+`MolecularFormula`,'CondensedFormula' and `EmpiricalFormula` data types.
+'ElementSymbol' is an enumeration type of all the element symbols used in the
+Isotopes library.
 -}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -60,21 +61,22 @@ module Isotope.Base (
     , isotopicMasses
     , integerMasses
     , isotopicAbundances
-    -- 'ChemicalMass' type class
-    , ChemicalMass(..)
+    -- Formula type class
+    , Formula(..)
     -- Elemental composition
     , ElementalComposition(..)
+    , ToElementalComposition(..)
+    , mkElementalComposition
     -- Molecular formulae
     , MolecularFormula(..)
+    , ToMolecularFormula(..)
     , (|+|)
     , (|-|)
     , (|*|)
     , mkMolecularFormula
-    , mkElementalComposition
-    , Formula(..)
-    , ToMolecularFormula(..)
     -- Condensed formulae
     , CondensedFormula(..)
+    , ToCondensedFormuala(..)
     -- Empirical formula
     , EmpiricalFormula(..)
     , ToEmpiricalFormula(..)
@@ -183,7 +185,8 @@ elementSymbolList = [H .. U]
 
 -- | Returns the most abundant naturally-occurring isotope for an element.
 elementMostAbundantIsotope :: Element -> Isotope
-elementMostAbundantIsotope e = maximumBy (comparing isotopicAbundance) $ isotopes' e
+elementMostAbundantIsotope e =
+  maximumBy (comparing isotopicAbundance) $ isotopes' e
 
 -- | Exact masses for all naturally-occurring isotopes for an element.
 elementIsotopicMasses :: Element -> [IsotopicMass]
@@ -511,9 +514,6 @@ elements = fromList
                                    , Isotope (92, 146)  238.0507884    0.992742 ])
   ]
 
-instance ChemicalMass ElementSymbol where
-    toElementalComposition x = ElementalComposition . fromList $ [(x, 1)]
-
 --------------------------------------------------------------------------------
 -- Functions taking an 'elementSymbol' as input
 
@@ -563,11 +563,26 @@ isotopicAbundances :: ElementSymbol -> [IsotopicAbundance]
 isotopicAbundances = elementIsotopicAbundances . findElement
 
 --------------------------------------------------------------------------------
--- 'ElementalComposition' type class
+-- Formula type class
+
+-- | Type class with two methods, 'renderFormula' and 'emptyFormula'. The
+-- 'renderFormula' method converts a formula to its shorthand notation.
+class Formula a where
+    renderFormula :: a -> String
+    emptyFormula  :: a
+
+--------------------------------------------------------------------------------
+-- Elemental composition
+
+-- | Provided since 'EmpiricalFormula' can be thought of as an elemenal
+-- composition but is not a molecular formula.
+newtype ElementalComposition = ElementalComposition  {
+    getElementalComposition :: Map ElementSymbol Int }
+        deriving (Show, Read, Eq, Ord)
 
 -- | Class containing four methods; 'toElementalComposition',
 -- 'monoisotopicMass', 'nominalMass' and 'averageMass'.
-class ChemicalMass a where
+class ToElementalComposition a where
      toElementalComposition :: a -> ElementalComposition
      monoisotopicMass       :: a -> MonoisotopicMass
      nominalMass            :: a -> NominalMass
@@ -579,10 +594,48 @@ class ChemicalMass a where
 
 -- Helper function for the calculating monoistopic masses, average mass and
 -- nominal masses for molecular formulae.
-getFormulaSum :: (Num a, ChemicalMass b) => (Element -> a) -> b -> a
+getFormulaSum :: (Num a, ToElementalComposition b) => (Element -> a) -> b -> a
 getFormulaSum f m = sum $
-    mapWithKey mapFunc (getComposition (toElementalComposition m))
+    mapWithKey mapFunc (getElementalComposition (toElementalComposition m))
   where mapFunc k v = (f . findElement) k * fromIntegral v
+
+-- | Smart constructor to make values of type 'ElementalComposition'.
+mkElementalComposition :: [(ElementSymbol, Int)] -> ElementalComposition
+mkElementalComposition = ElementalComposition . filterZero . fromList
+
+instance ToElementalComposition ElementSymbol where
+    toElementalComposition sym = mkElementalComposition [(sym, 1)]
+
+instance ToElementalComposition ElementalComposition where
+  toElementalComposition = id
+
+instance Formula ElementalComposition where
+   renderFormula f = foldMap renderFoldfunc
+                     ((sortElementSymbolMap . getElementalComposition) f)
+   emptyFormula    = mkElementalComposition []
+
+-- Helper function for 'renderFormula'.
+renderFoldfunc :: (ElementSymbol, Int) -> String
+renderFoldfunc (sym, num) = show sym ++ if num == 1
+                                           then ""
+                                           else show num
+
+-- Use the Hill system for writing formulas. C then H followed by elements in
+-- alphabetical order.
+sortElementSymbolMap :: Map ElementSymbol Int -> [(ElementSymbol, Int)]
+sortElementSymbolMap m = sortBy (hillSystem fst) elementSymbolIntList
+    where
+      elementSymbolIntList = toList m
+      elementSymbols = fst <$> elementSymbolIntList
+      containsC = C `elem` elementSymbols
+      hillSystem f a b = case (f a, f b) of
+        (C, _)   -> LT
+        (_, C)   -> GT
+        (H, b')  -> if containsC then LT
+                    else (show . elementName) H `compare` show b'
+        (a', H)  -> if containsC then GT
+                    else show a' `compare` (show . elementName) H
+        (a', b') -> show a' `compare` show b'
 
 --------------------------------------------------------------------------------
 -- Molecular formulae
@@ -592,15 +645,8 @@ newtype MolecularFormula = MolecularFormula {
     getMolecularFormula :: Map ElementSymbol Int }
         deriving (Show, Read, Eq, Ord)
 
--- | Provided since 'EmpiricalFormula' can be thought of as a chemical
--- composition but is not a molecular formula.
-newtype ElementalComposition = ElementalComposition  {
-    getComposition :: Map ElementSymbol Int }
-        deriving (Show, Read, Eq, Ord)
-
-instance Monoid MolecularFormula where
-   mempty = emptyFormula
-   mappend = (|+|)
+class ToMolecularFormula a where
+    toMolecularFormula :: a -> MolecularFormula
 
 -- | Infix operator for the addition of molecular formulae. (|+|) is mappend in
 -- the monoid instance and the same fixity as (+).
@@ -630,54 +676,25 @@ combineMolecularFormulae f m1 m2 = MolecularFormula $
                                                     (getMolecularFormula m1)
                                                     (getMolecularFormula m2)
 
--- Helper function to remove (k, v) pairs where v == 0.
-filterZero :: Map k Int -> Map k Int
-filterZero = filter (/= 0)
-
-instance ChemicalMass MolecularFormula where
-    toElementalComposition (MolecularFormula m) = ElementalComposition m
-
-class ToMolecularFormula a where
-    toMolecularFormula :: a -> MolecularFormula
-
--- | Type class with two methods, 'renderFormula' and 'emptyFormula'. The
--- 'renderFormula' method converts a formula to its shorthand notation.
-class Formula a where
-    renderFormula :: a -> String
-    emptyFormula :: a
-
 -- | Smart constructor to make values of type 'MolecularFormula'.
 mkMolecularFormula :: [(ElementSymbol, Int)] -> MolecularFormula
 mkMolecularFormula = MolecularFormula . filterZero . fromList
 
--- | Smart constructor to make values of type 'ElementalComposition'.
-mkElementalComposition :: [(ElementSymbol, Int)] -> ElementalComposition
-mkElementalComposition = ElementalComposition . filterZero . fromList
+-- Helper function to remove (k, v) pairs where v == 0.
+filterZero :: Map k Int -> Map k Int
+filterZero = filter (/= 0)
+
+instance Monoid MolecularFormula where
+   mempty = emptyFormula
+   mappend = (|+|)
+
+instance ToElementalComposition MolecularFormula where
+    toElementalComposition (MolecularFormula m) = ElementalComposition m
 
 instance Formula MolecularFormula where
-   renderFormula f = foldMap renderFoldfunc ((sortElementSymbolMap . getMolecularFormula) f)
+   renderFormula f = foldMap renderFoldfunc
+                     ((sortElementSymbolMap . getMolecularFormula) f)
    emptyFormula = mkMolecularFormula []
-
--- Helper function for 'renderFormula'.
-renderFoldfunc :: (ElementSymbol, Int) -> String
-renderFoldfunc (sym, num) = show sym ++ if num == 1
-                                           then ""
-                                           else show num
-
--- Use the Hill system for writing molecular formulas. C then H followed by
--- elements in alphabetical order.
-sortElementSymbolMap :: Map ElementSymbol Int -> [(ElementSymbol, Int)]
-sortElementSymbolMap m = sortBy (hillSystem fst) elementSymbolIntList
-    where
-      elementSymbolIntList = toList m
-      elementSymbols = fst <$> elementSymbolIntList
-      containsC = C `elem` elementSymbols
-      hillSystem f a b = case (f a, f b) of
-        (C, _)   -> LT
-        (_, C)   -> GT
-        (H, b')  -> if containsC then LT else (show . elementName) H `compare` show b'
-        (a', H)  -> if containsC then GT else show a' `compare` (show . elementName) H
-        (a', b') -> show a' `compare` show b'
 
 --------------------------------------------------------------------------------
 -- Condensed formulae
@@ -687,8 +704,17 @@ newtype CondensedFormula = CondensedFormula {
     getCondensedFormula :: [Either MolecularFormula ([MolecularFormula], Int)] }
         deriving (Show, Read, Eq, Ord)
 
-instance ChemicalMass CondensedFormula where
-    toElementalComposition = ElementalComposition . getMolecularFormula . toMolecularFormula
+class ToCondensedFormuala a where
+  toCondensedFormula :: a -> CondensedFormula
+
+instance Monoid CondensedFormula where
+  mempty = emptyFormula
+  mappend (CondensedFormula x) (CondensedFormula y) =
+    CondensedFormula (x ++ y)
+
+instance ToElementalComposition CondensedFormula where
+    toElementalComposition =
+      ElementalComposition . getMolecularFormula . toMolecularFormula
 
 instance ToMolecularFormula CondensedFormula where
     toMolecularFormula c = foldMap foldFunc (getCondensedFormula c)
@@ -701,8 +727,10 @@ instance Formula CondensedFormula where
         where foldFunc = \case
                           Left chemForm -> renderFormula chemForm
                           Right (chemFormList, n) ->
-                              "(" ++ foldMap renderFormula chemFormList ++ ")" ++ formatNum n
-                                  where formatNum n' = if n' == 1 then "" else show n'
+                            "(" ++ foldMap renderFormula chemFormList ++ ")"
+                             ++ formatNum n
+                                where formatNum n' = if n' == 1 then ""
+                                                     else show n'
     emptyFormula = CondensedFormula []
 
 --------------------------------------------------------------------------------
@@ -711,29 +739,35 @@ newtype EmpiricalFormula = EmpiricalFormula {
     getEmpiricalFormula :: Map ElementSymbol Int }
         deriving (Show, Read, Eq, Ord)
 
-instance ChemicalMass EmpiricalFormula where
-    toElementalComposition (EmpiricalFormula a) = ElementalComposition a
-
-instance Formula EmpiricalFormula where
-   renderFormula f = foldMap renderFoldfunc ((sortElementSymbolMap . getEmpiricalFormula) f)
-   emptyFormula = mkEmpiricalFormula []
+-- | Type class with a single method, 'toEmpiricalFormula', which converts a
+-- chemical data type to `EmpiricalFormula`.
+class ToEmpiricalFormula a where
+  toEmpiricalFormula :: a -> EmpiricalFormula
 
 -- | Smart constructor to make values of type 'EmpiricalFormula'.
 mkEmpiricalFormula :: [(ElementSymbol, Int)] -> EmpiricalFormula
-mkEmpiricalFormula = EmpiricalFormula . filterZero . fromList
+mkEmpiricalFormula l =
+  let m = filterZero (fromList l)
+  in EmpiricalFormula $ (`div` greatestCommonDenom m) <$> m
 
--- | Type class with a single method, 'toEmpiricalFormula', which converts a
--- chemical data type to `EmpiricalFormula`.
-class ChemicalMass a => ToEmpiricalFormula a where
-  toEmpiricalFormula :: a -> EmpiricalFormula
+instance ToEmpiricalFormula ElementalComposition where
+  toEmpiricalFormula (ElementalComposition m) =
+    EmpiricalFormula $ (`div` greatestCommonDenom m) <$> m
 
 instance ToEmpiricalFormula MolecularFormula where
-  toEmpiricalFormula (MolecularFormula m)
-    | null m   = EmpiricalFormula m
-    | otherwise = EmpiricalFormula $ (`div` greatestCommonDenom m) <$> m
+  toEmpiricalFormula (MolecularFormula m) =
+    EmpiricalFormula $ (`div` greatestCommonDenom m) <$> m
 
 instance ToEmpiricalFormula CondensedFormula where
   toEmpiricalFormula = toEmpiricalFormula . toMolecularFormula
+
+instance ToElementalComposition EmpiricalFormula where
+  toElementalComposition (EmpiricalFormula a) = ElementalComposition a
+
+instance Formula EmpiricalFormula where
+   renderFormula f = foldMap renderFoldfunc
+                     ((sortElementSymbolMap . getEmpiricalFormula) f)
+   emptyFormula = mkEmpiricalFormula []
 
 -- Helper function to find the greatest common denominator in a map.
 greatestCommonDenom :: (Integral v) => Map k v -> v

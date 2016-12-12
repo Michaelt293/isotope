@@ -50,15 +50,15 @@ spec = do
 
     describe "monoisotopicMass" $
       it "calling function with C should be 12.0" $
-        monoisotopicMass C `shouldBe` 12.0
+        monoisotopicMass C `shouldBe` MonoisotopicMass 12.0
 
     describe "nominalMass" $
       it "calling function with C should return 12" $
-        nominalMass C `shouldBe` 12
+        nominalMass C `shouldBe` NominalMass 12
 
     describe "isotopicMasses" $
       it "H should return a list containing 1.007... and 2.014...." $
-        isotopicMasses H `shouldBe` [1.00782503223, 2.01410177812]
+        isotopicMasses H `shouldBe` IsotopicMass <$> [1.00782503223, 2.01410177812]
 
     describe "integerMasses" $ do
       it "calling function with H should return [1, 2]" $
@@ -68,13 +68,13 @@ spec = do
 
     describe "averageMass" $
       it "calling function with C should return 12.0107" $
-        withinTolerance (averageMass C) 12.0107 0.0001 `shouldBe` True
+        withinTolerance (getAverageMass (averageMass C)) 12.0107 0.0001 `shouldBe` True
 
     describe "isotopicAbundances" $ do
       it "calling function with C should return [0.9893, 0.0107]" $
-        isotopicAbundances C `shouldBe` [0.9893, 0.0107]
+        isotopicAbundances C `shouldBe` IsotopicAbundance <$> [0.9893, 0.0107]
       it "sum of isotopic abundances for an element should equal 1" $
-        (\sym -> withinTolerance ((sum . isotopicAbundances) sym) 1 0.0001) <$>
+        (\sym -> withinTolerance (sum (getIsotopicAbundance <$> isotopicAbundances sym)) 1 0.0001) <$>
         elementSymbolList `shouldSatisfy` and
 
     describe "renderFormula for ElementalComposition" $ do
@@ -113,13 +113,13 @@ spec = do
       it "toElementalComposition" $ property $
         \ec -> toElementalComposition ec == (ec :: ElementalComposition)
       it "monoisotopic mass of ethanol" $
-        withinTolerance (monoisotopicMass [ele|C2H6O|]) 46.04186 0.0001
+        withinTolerance (getMonoisotopicMass (monoisotopicMass [ele|C2H6O|])) 46.04186 0.0001
         `shouldBe` True
       it "average mass of ethanol" $
-        withinTolerance (averageMass [ele|C2H6O|]) 46.06844 0.0001
+        withinTolerance (getAverageMass (averageMass [ele|C2H6O|])) 46.06844 0.0001
         `shouldBe` True
       it "nominalMass mass of ethanol" $
-        nominalMass [ele|C2H6O|] `shouldBe` 46
+        nominalMass [ele|C2H6O|] `shouldBe` NominalMass 46
 
     describe "mkElementalComposition" $ do
       it "zero is filtered out" $
@@ -133,23 +133,23 @@ spec = do
 
     describe "Monoid instance for MolecularFormula" $ do
       it "associativity" $ property $
-          \a b c -> (a |+| b) |+| c == a |+| (b |+| c)
+          \a b c -> (a |+| b) |+| c == a |+| (b |+| c :: MolecularFormula)
       it "right identity" $ property $
-          \a -> a |+| emptyFormula == a
+          \a -> (a :: MolecularFormula) |+| emptyFormula == a
       it "left identity" $ property $
-          \a -> emptyFormula |+| a == a
+          \a -> (emptyFormula :: MolecularFormula) |+| a == a
 
     describe "Addition of molecular formulae is commutative" $
       it "commutative" $ property $
-        \a b -> a |+| b == b |+| a
+        \a b -> (a |+| b) == (b |+| a :: MolecularFormula)
 
     describe "properties of |+|, |*| and |-|)" $ do
       it "a |-| a = emptyFormula" $ property $
-        \a -> a |-| a == emptyFormula
+        \a -> a |-| a == (emptyFormula :: MolecularFormula)
       it "0 |*| a == emptyFormula" $ property $
-        \a -> 0 |*| a == emptyFormula
+        \a -> a |*| 0 == (emptyFormula :: MolecularFormula)
       it "a |+| a == 2 |*| a" $ property $
-        \a -> a |+| a == 2 |*| a
+        \a -> a |+| a == (a :: MolecularFormula) |*| 2
 
     describe "ToElementalComposition - MolecularFormula instance" $ do
       it "[mol|C2H6O|] should be [ele|C2H6O|]" $

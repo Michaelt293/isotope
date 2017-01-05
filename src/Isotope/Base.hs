@@ -96,6 +96,7 @@ import Data.Foldable hiding (toList)
 import Data.Ord
 import Data.List           (elemIndex, sortBy)
 import Data.Maybe          (fromJust)
+import Data.Monoid
 
 --------------------------------------------------------------------------------
 
@@ -696,7 +697,7 @@ instance Formula ElementalComposition where
 
 -- Helper function for 'renderFormula'.
 renderFoldfunc :: (ElementSymbol, Int) -> String
-renderFoldfunc (sym, num) = show sym ++ if num == 1
+renderFoldfunc (sym, num) = show sym <> if num == 1
                                            then ""
                                            else show num
 
@@ -766,7 +767,7 @@ instance Formula MolecularFormula where
 
 -- | 'CondensedFormula' is a newtype to represent a condensed formula.
 newtype CondensedFormula = CondensedFormula {
-    getCondensedFormula :: [Either MolecularFormula ([MolecularFormula], Int)] }
+    getCondensedFormula :: [Either MolecularFormula (CondensedFormula, Int)] }
         deriving (Show, Read, Eq, Ord)
 
 class ToCondensedFormuala a where
@@ -774,8 +775,7 @@ class ToCondensedFormuala a where
 
 instance Monoid CondensedFormula where
   mempty = emptyFormula
-  mappend (CondensedFormula x) (CondensedFormula y) =
-    CondensedFormula (x ++ y)
+  CondensedFormula x `mappend` CondensedFormula y = CondensedFormula (x <> y)
 
 instance ToElementalComposition CondensedFormula where
     toElementalComposition =
@@ -785,15 +785,15 @@ instance ToMolecularFormula CondensedFormula where
     toMolecularFormula c = foldMap foldFunc (getCondensedFormula c)
        where foldFunc = \case
                          Left chemForm -> chemForm
-                         Right (molForm, n) -> mconcat molForm |*| n
+                         Right (condForm, n) -> toMolecularFormula condForm |*| n
 
 instance Formula CondensedFormula where
     renderFormula c = foldMap foldFunc (getCondensedFormula c)
         where foldFunc = \case
                           Left chemForm -> renderFormula chemForm
                           Right (chemFormList, n) ->
-                            "(" ++ foldMap renderFormula chemFormList ++ ")"
-                             ++ formatNum n
+                            "(" <> renderFormula chemFormList <> ")"
+                             <> formatNum n
                                 where formatNum n' = if n' == 1 then ""
                                                      else show n'
     emptyFormula = CondensedFormula []

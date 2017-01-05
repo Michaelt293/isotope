@@ -5,6 +5,7 @@ module Isotope.BaseSpec (spec) where
 import Isotope
 import Test.Hspec
 import Test.QuickCheck
+import Control.Monad
 import Data.Char
 import Data.List
 
@@ -17,7 +18,7 @@ spec = do
         (\x -> length x /= 2 || (isLower . last) x) . show <$>
         elementSymbolList `shouldSatisfy` and
 
-    describe "lookupElement" $
+    describe "lookupElement" .
       it "should not contain duplicate elements" $
         lookupElement <$> elementSymbolList `shouldSatisfy` allUnique
 
@@ -36,27 +37,27 @@ spec = do
       it "should not have duplicated atomic numbers" $
         atomicNumber <$> elementSymbolList `shouldSatisfy` allUnique
 
-    describe "isotopes" $
+    describe "isotopes" .
       it "should not have duplicate isotopes" $
         isotopes <$> elementSymbolList `shouldSatisfy` allUnique
 
-    describe "mostAbundantIsotope" $
+    describe "mostAbundantIsotope" .
       it "C should be C12 (six protons and six neutrons)" $
         (nucleons . mostAbundantIsotope) C `shouldBe` (6, 6)
 
-    describe "selectIsotope" $
+    describe "selectIsotope" .
       it "calling fuction with the arguments C and 12 should select C12" $
         nucleons (selectIsotope C 12) `shouldBe` (6, 6)
 
-    describe "monoisotopicMass" $
+    describe "monoisotopicMass" .
       it "calling function with C should be 12.0" $
         monoisotopicMass C `shouldBe` MonoisotopicMass 12.0
 
-    describe "nominalMass" $
+    describe "nominalMass" .
       it "calling function with C should return 12" $
         nominalMass C `shouldBe` NominalMass 12
 
-    describe "isotopicMasses" $
+    describe "isotopicMasses" .
       it "H should return a list containing 1.007... and 2.014...." $
         isotopicMasses H `shouldBe` IsotopicMass <$> [1.00782503223, 2.01410177812]
 
@@ -66,7 +67,7 @@ spec = do
       it "proton number should be equal to atomic number" $
         all protonNumEqAtomicNum elementSymbolList
 
-    describe "averageMass" $
+    describe "averageMass" .
       it "calling function with C should return 12.0107" $
         withinTolerance (getAverageMass (averageMass C)) 12.0107 0.0001 `shouldBe` True
 
@@ -110,7 +111,7 @@ spec = do
         renderFormula [emp|H2O4S|] `shouldBe` "H2O4S"
 
     describe "ToElementalComposition - ElementalComposition instance" $ do
-      it "toElementalComposition" $ property $
+      it "toElementalComposition" . property $
         \ec -> toElementalComposition ec == (ec :: ElementalComposition)
       it "monoisotopic mass of ethanol" $
         withinTolerance (getMonoisotopicMass (monoisotopicMass [ele|C2H6O|])) 46.04186 0.0001
@@ -127,28 +128,28 @@ spec = do
       it "should give the correct formula" $
         mkElementalComposition [(C, 2), (H, 6), (O, 1)] `shouldBe` [ele|C2H6O|]
 
-    describe "ToElementalComposition - ElementSymbol instance" $
-      it "monoisotopicMass" $ property $
+    describe "ToElementalComposition - ElementSymbol instance" .
+      it "monoisotopicMass" . property $
         \sym -> monoisotopicMass sym == monoisotopicMass (mkElementalComposition [(sym, 1)])
 
     describe "Monoid instance for MolecularFormula" $ do
-      it "associativity" $ property $
+      it "associativity" . property $
           \a b c -> (a |+| b) |+| c == a |+| (b |+| c :: MolecularFormula)
-      it "right identity" $ property $
+      it "right identity" . property $
           \a -> (a :: MolecularFormula) |+| emptyFormula == a
-      it "left identity" $ property $
+      it "left identity" . property $
           \a -> (emptyFormula :: MolecularFormula) |+| a == a
 
-    describe "Addition of molecular formulae is commutative" $
-      it "commutative" $ property $
+    describe "Addition of molecular formulae is commutative" .
+      it "commutative" . property $
         \a b -> (a |+| b) == (b |+| a :: MolecularFormula)
 
     describe "properties of |+|, |*| and |-|)" $ do
-      it "a |-| a = emptyFormula" $ property $
+      it "a |-| a = emptyFormula" . property $
         \a -> a |-| a == (emptyFormula :: MolecularFormula)
-      it "0 |*| a == emptyFormula" $ property $
+      it "0 |*| a == emptyFormula" . property $
         \a -> a |*| 0 == (emptyFormula :: MolecularFormula)
-      it "a |+| a == 2 |*| a" $ property $
+      it "a |+| a == 2 |*| a" . property $
         \a -> a |+| a == (a :: MolecularFormula) |*| 2
 
     describe "ToElementalComposition - MolecularFormula instance" $ do
@@ -159,12 +160,12 @@ spec = do
         mkElementalComposition []
 
     describe "Monoid instance for CondensedFormula" $ do
-      it "associativity" $ property $
+      it "associativity" . property $
           \a b c -> (a `mappend` b) `mappend` c ==
                      a `mappend` (b `mappend` c :: CondensedFormula)
-      it "right identity" $ property $
+      it "right identity" . property $
           \a -> (a :: CondensedFormula) `mappend` mempty == a
-      it "left identity" $ property $
+      it "left identity" . property $
           \a -> emptyFormula `mappend` (a :: CondensedFormula) == a
 
     describe "ToElementalComposition - CondensedFormula instance" $ do
@@ -216,11 +217,11 @@ spec = do
         toElementalComposition [emp|CH|] `shouldBe` [ele|CH|]
 
     describe "Laws for ElementalComposition, MolecularFormula, EmpiricalFormula and CondensedFormula data types" $ do
-      it "applying toEmpiricalFormula to a CondensedFormula should give the same result as applying toMolecularFormula compose toEmpiricalFormula" $ property $
+      it "applying toEmpiricalFormula to a CondensedFormula should give the same result as applying toMolecularFormula compose toEmpiricalFormula" . property $
         \c -> toEmpiricalFormula c == (toEmpiricalFormula . toMolecularFormula) (c :: CondensedFormula)
-      it "applying toElementalComposition to a CondensedFormula should give the same result as applying toMolecularFormula compose toElementalComposition" $ property $
+      it "applying toElementalComposition to a CondensedFormula should give the same result as applying toMolecularFormula compose toElementalComposition" . property $
         \c -> toElementalComposition c == (toElementalComposition . toMolecularFormula) (c :: CondensedFormula)
-      it "applying toElementalComposition compose toEmpiricalFormula to an EmpiricalFormula should return the same EmpiricalFormula" $ property $
+      it "applying toElementalComposition compose toEmpiricalFormula to an EmpiricalFormula should return the same EmpiricalFormula" . property $
         \e -> (toEmpiricalFormula . toElementalComposition) e == (e :: EmpiricalFormula)
 
 allUnique :: (Eq a) => [a] -> Bool
@@ -242,15 +243,6 @@ elemSymIntPairGen = do
 elemSymIntPairListGen :: Gen [(ElementSymbol, Int)]
 elemSymIntPairListGen = listOf elemSymIntPairGen
 
-leftCondensedFormulaGen :: Gen (Either MolecularFormula ([MolecularFormula], Int))
-leftCondensedFormulaGen = Left <$> arbitrary
-
-rightCondensedFormulaGen :: Gen (Either MolecularFormula ([MolecularFormula], Int))
-rightCondensedFormulaGen = do
-  molecularFormulaList <- listOf (arbitrary :: Gen MolecularFormula)
-  n <- choose (1, 4)
-  return $ Right (molecularFormulaList, n)
-
 instance Arbitrary ElementSymbol where
     arbitrary = oneof $ return <$> elementSymbolList
 
@@ -261,8 +253,25 @@ instance Arbitrary MolecularFormula where
   arbitrary = mkMolecularFormula <$> elemSymIntPairListGen
 
 instance Arbitrary CondensedFormula where
-  arbitrary = CondensedFormula <$>
-    listOf (oneof [leftCondensedFormulaGen, rightCondensedFormulaGen])
+  arbitrary = do
+    n <- choose (0, 4)
+    condForm <- vectorOf n
+      (oneof [leftCondensedFormulaGen, sized arbRightCondensedFormulaGen])
+    return $ CondensedFormula condForm
+    where
+      leftCondensedFormulaGen :: Gen (Either MolecularFormula (CondensedFormula, Int))
+      leftCondensedFormulaGen = Left <$> arbitrary
+      arbRightCondensedFormulaGen :: Int -> Gen (Either MolecularFormula (CondensedFormula, Int))
+      arbRightCondensedFormulaGen 0 = do
+        m <- choose (1, 4)
+        condForm <- leftCondensedFormulaGen
+        return $ Right (CondensedFormula [condForm], m)
+      arbRightCondensedFormulaGen n | n > 0 = do
+        m <- choose (1, 4)
+        v <- choose (1, 3)
+        let n' = n `div` (v + 1)
+        condForm' <- replicateM v (arbRightCondensedFormulaGen n')
+        return $ Right (CondensedFormula condForm', m)
 
 instance Arbitrary EmpiricalFormula where
   arbitrary = mkEmpiricalFormula <$> elemSymIntPairListGen

@@ -29,8 +29,6 @@ module Isotope (
   , NeutronNumber
   , Nucleons
   , MassNumber
-  -- * Infix operators used in `Isotope`
-  , Operators(..)
   -- * 'Isotope' and 'Element' data types
   , Isotope(..)
   , Element(..)

@@ -48,20 +48,12 @@ elementSymbol = read <$> choice (try . string <$> elementSymbolStrList)
 
 -- | Parses an sub-formula (i.e., \"C2\").
 subFormula :: Parser (ElementSymbol, Int)
-subFormula = do
-    sym <- elementSymbol
-    num <- optional L.integer
-    return $ case num of
-                  Nothing   -> (sym, 1)
-                  Just num' -> (sym, fromIntegral num')
+subFormula =
+  (\sym num -> (sym, fromIntegral num)) <$> elementSymbol <*> option 1 L.integer
 
 -- | Parses an elemental composition (i.e. \"C6H6\").
 elementalComposition :: Parser ElementalComposition
 elementalComposition = mkElementalComposition <$> many subFormula
-
--- | Parses an sub-molecular-formula (i.e., \"C2\").
-subMolecularFormula :: Parser MolecularFormula
-subMolecularFormula = mkMolecularFormula . pure <$> subFormula
 
 -- | Parses a molecular formula (i.e. \"C6H6\").
 molecularFormula :: Parser MolecularFormula
@@ -71,6 +63,8 @@ molecularFormula = mkMolecularFormula <$> many subFormula
 condensedFormula :: Parser CondensedFormula
 condensedFormula =  CondensedFormula <$> many (leftCondensedFormula <|> rightCondensedFormula)
   where
+    subMolecularFormula :: Parser MolecularFormula
+    subMolecularFormula = mkMolecularFormula . pure <$> subFormula
     leftCondensedFormula :: Parser (Either MolecularFormula (CondensedFormula, Int))
     leftCondensedFormula = Left <$> subMolecularFormula
     rightCondensedFormula :: Parser (Either MolecularFormula (CondensedFormula, Int))
@@ -78,10 +72,8 @@ condensedFormula =  CondensedFormula <$> many (leftCondensedFormula <|> rightCon
        _ <- char '('
        formula <- condensedFormula
        _ <- char ')'
-       num <- optional L.integer
-       return . Right $ case num of
-                             Nothing   -> (formula, 1)
-                             Just num' -> (formula, fromIntegral num')
+       num <- option 1 L.integer
+       return $ Right (formula, fromIntegral num)
 
 -- | Parses a empirical formula (i.e. \"CH\").
 empiricalFormula :: Parser EmpiricalFormula

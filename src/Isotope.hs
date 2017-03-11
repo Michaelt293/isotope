@@ -47,7 +47,6 @@ module Isotope (
   -- * 'elements' - a map containing isotopic data for each element.
   , elements
   -- * Functions taking an 'elementSymbol' as input
-  , lookupElement
   , findElement
   , elementName
   , atomicNumber
@@ -69,7 +68,7 @@ module Isotope (
   , mkMolecularFormula
   -- * Condensed formulae
   , CondensedFormula(..)
-  , ToCondensedFormuala(..)
+  , ToCondensedFormula(..)
   -- * Empirical formulae
   , EmpiricalFormula(..)
   , ToEmpiricalFormula(..)

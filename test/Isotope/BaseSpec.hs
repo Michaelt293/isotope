@@ -18,9 +18,9 @@ spec = do
         (\x -> length x /= 2 || (isLower . last) x) . show <$>
         elementSymbolList `shouldSatisfy` and
 
-    describe "lookupElement" .
+    describe "elementSymbolList" .
       it "should not contain duplicate elements" $
-        lookupElement <$> elementSymbolList `shouldSatisfy` allUnique
+        findElement <$> elementSymbolList `shouldSatisfy` allUnique
 
     describe "elementName" $ do
       it "should not be an empty string" $
@@ -47,7 +47,7 @@ spec = do
 
     describe "selectIsotope" .
       it "calling fuction with the arguments C and 12 should select C12" $
-        nucleons (selectIsotope C 12) `shouldBe` (6, 6)
+        nucleons <$> selectIsotope C 12 `shouldBe` Just (6, 6)
 
     describe "monoisotopicMass" .
       it "calling function with C should be 12.0" $
@@ -93,6 +93,8 @@ spec = do
         renderFormula [mol|CCl4|] `shouldBe` "CCl4"
       it "[mol|H2O4S|] should be \"H2O4S\"" $
         renderFormula [mol|H2O4S|] `shouldBe` "H2O4S"
+      it "[mol|BBr3|] should be \"BBr3\"" $
+        renderFormula [mol|BBr3|] `shouldBe` "BBr3"
 
     describe "renderFormula for CondensedFormula" $ do
       it "[con|C6H6O|] should be \"C6H6O\"" $

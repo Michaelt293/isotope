@@ -1,7 +1,7 @@
 {-|
 Module      : Isotope.Base
-Description : Contains most of the data type declarations used in the Isotope
-              library.
+Description : Contains the data type and type class declarations used in the
+              Isotope library.
 Copyright   : Michael Thomas
 License     : GPL-3
 Maintainer  : Michael Thomas <Michaelt293@gmail.com>
@@ -53,7 +53,6 @@ module Isotope.Base (
     -- 'elements' - a map containing isotopic data for each element.
     , elements
     -- Functions taking an 'elementSymbol' as input
-    , lookupElement
     , findElement
     , elementName
     , atomicNumber
@@ -69,33 +68,24 @@ module Isotope.Base (
     , ElementalComposition(..)
     , ToElementalComposition(..)
     , mkElementalComposition
-    -- Molecular formulae
+    -- Molecular formula
     , MolecularFormula(..)
     , ToMolecularFormula(..)
     , mkMolecularFormula
-    -- Condensed formulae
+    -- Condensed formula
     , CondensedFormula(..)
-    , ToCondensedFormuala(..)
+    , ToCondensedFormula(..)
     -- Empirical formula
     , EmpiricalFormula(..)
     , ToEmpiricalFormula(..)
     , mkEmpiricalFormula
     ) where
 
-import Prelude hiding      (lookup,filter)
-import Data.Map            ( Map
-                           , fromList
-                           , unionWith
-                           , filter
-                           , mapWithKey
-                           , lookup
-                           , (!)
-                           , toList
-                           )
-import Data.Foldable hiding (toList)
+import Data.Map (Map)
+import qualified Data.Map as Map
+import Data.Foldable
 import Data.Ord
-import Data.List           (elemIndex, sortBy)
-import Data.Maybe          (fromJust)
+import Data.List
 import Data.Monoid
 
 --------------------------------------------------------------------------------
@@ -118,7 +108,7 @@ type IntegerMass = MassNumber
 
 -- | The exact mass of the most abundant isotope for an element or the sum of
 -- the exact masses of the most abundant isotope of each element for a
--- molecular formula.
+-- elemental composition.
 newtype MonoisotopicMass = MonoisotopicMass { getMonoisotopicMass :: Double }
                          deriving (Show, Eq, Ord)
 
@@ -132,8 +122,8 @@ instance Operators MonoisotopicMass where
   MonoisotopicMass x |*| y = MonoisotopicMass $ x * fromIntegral y
 
 -- | The integer mass of the most abundant isotope for an element or the sum of
--- integer mass of the most abundant isotope of each element for a chemical
--- formula.
+-- integer mass of the most abundant isotope of each element for a elemental
+-- composition.
 newtype NominalMass = NominalMass { getNominalMass :: Int }
                     deriving (Show, Eq, Ord)
 
@@ -146,7 +136,7 @@ instance Operators NominalMass where
   NominalMass x |-| NominalMass y = NominalMass $ x - y
   NominalMass x |*| y = NominalMass $ x * y
 
--- | The average mass of an element or molecular formula based on
+-- | The average mass of an element or elemental composition based on
 -- naturally-occurring abundances.
 newtype AverageMass = AverageMass { getAverageMass :: Double }
                     deriving (Show, Eq, Ord)
@@ -284,14 +274,15 @@ tupleToIsotope :: (Nucleons, Double, Double) -> Isotope
 tupleToIsotope (nucl, mass, abun) =
   Isotope nucl (IsotopicMass mass) (IsotopicAbundance abun)
 
-tupleToElement :: (AtomicNumber, ElementName, [(Nucleons, Double, Double)]) -> Element
+tupleToElement
+  :: (AtomicNumber, ElementName, [(Nucleons, Double, Double)]) -> Element
 tupleToElement (atomNum, name, isotopes) =
   Element atomNum name (tupleToIsotope <$> isotopes)
 
 -- | Map of the periodic table. All data on isotopic masses and abundances is
 -- contained within this map.
 elements :: Map ElementSymbol Element
-elements = tupleToElement <$> fromList
+elements = tupleToElement <$> Map.fromList
   [ (H,  (1, "hydrogen",      [ ((1, 0),     1.00782503223,  0.999885)
                               , ((1, 1),     2.01410177812,  0.000115) ]))
   , (He, (2,  "helium",       [ ((2, 1),     3.0160293201,   0.00000134)
@@ -585,15 +576,10 @@ elements = tupleToElement <$> fromList
 --------------------------------------------------------------------------------
 -- Functions taking an 'elementSymbol' as input
 
--- | Searches elements (a map) with an 'ElementSymbol' key and returns
--- information for the element (wrapped in 'Maybe').
-lookupElement :: ElementSymbol -> Maybe Element
-lookupElement = flip lookup elements
-
 -- | Searches 'elements' (a map) with an 'ElementSymbol' key and returns
 -- information for the element.
 findElement :: ElementSymbol -> Element
-findElement = (!) elements
+findElement = (Map.!) elements
 
 -- | Returns the name for an element symbol.
 elementName :: ElementSymbol -> ElementName
@@ -612,11 +598,11 @@ mostAbundantIsotope :: ElementSymbol -> Isotope
 mostAbundantIsotope = elementMostAbundantIsotope . findElement
 
 -- | Selects an isotope of element based on the isotope's mass number
--- ('IntegerMass'). Note: This is a partial function.
-selectIsotope :: ElementSymbol -> MassNumber -> Isotope
-selectIsotope sym mass = isotopeList !! indexOfIsotope
+-- ('IntegerMass').
+selectIsotope :: ElementSymbol -> MassNumber -> Maybe Isotope
+selectIsotope sym massNum =
+  find (\iso -> (massNumber . nucleons) iso ==  massNum) isotopeList
     where isotopeList = isotopes sym
-          indexOfIsotope = fromJust $ elemIndex mass (integerMasses sym)
 
 -- | Exact masses for all naturally-occurring isotopes for an element.
 isotopicMasses :: ElementSymbol -> [IsotopicMass]
@@ -633,7 +619,7 @@ isotopicAbundances = elementIsotopicAbundances . findElement
 --------------------------------------------------------------------------------
 -- Formula type class
 
--- | Type class with two methods, 'renderFormula' and 'emptyFormula'. The
+-- | Type class with two methods; 'renderFormula' and 'emptyFormula'. The
 -- 'renderFormula' method converts a formula to its shorthand notation.
 class Formula a where
     renderFormula :: a -> String
@@ -665,12 +651,12 @@ class ToElementalComposition a where
 getFormulaSum :: (Monoid a, Operators a, ToElementalComposition b)
   => (Element -> a) -> b -> a
 getFormulaSum f m = fold $
-    mapWithKey mapFunc (getElementalComposition (toElementalComposition m))
+    Map.mapWithKey mapFunc (getElementalComposition (toElementalComposition m))
   where mapFunc k v = (f . findElement) k |*| v
 
 -- | Smart constructor to make values of type 'ElementalComposition'.
 mkElementalComposition :: [(ElementSymbol, Int)] -> ElementalComposition
-mkElementalComposition = ElementalComposition . filterZero . fromList
+mkElementalComposition = ElementalComposition . filterZero . Map.fromList
 
 instance Monoid ElementalComposition where
   mempty = emptyFormula
@@ -706,16 +692,16 @@ renderFoldfunc (sym, num) = show sym <> if num == 1
 sortElementSymbolMap :: Map ElementSymbol Int -> [(ElementSymbol, Int)]
 sortElementSymbolMap m = sortBy (hillSystem fst) elementSymbolIntList
     where
-      elementSymbolIntList = toList m
+      elementSymbolIntList = Map.toList m
       elementSymbols = fst <$> elementSymbolIntList
       containsC = C `elem` elementSymbols
       hillSystem f a b = case (f a, f b) of
         (C, _)   -> LT
         (_, C)   -> GT
         (H, b')  -> if containsC then LT
-                    else (show . elementName) H `compare` show b'
+                    else show H `compare` show b'
         (a', H)  -> if containsC then GT
-                    else show a' `compare` (show . elementName) H
+                    else show a' `compare` show H
         (a', b') -> show a' `compare` show b'
 
 --------------------------------------------------------------------------------
@@ -726,21 +712,21 @@ newtype MolecularFormula = MolecularFormula {
     getMolecularFormula :: Map ElementSymbol Int }
         deriving (Show, Read, Eq, Ord)
 
-class ToMolecularFormula a where
+class ToElementalComposition a => ToMolecularFormula a where
     toMolecularFormula :: a -> MolecularFormula
 
 -- The function unionWith adapted to work with 'Map ElementSymbol Int'.
 combineMaps :: (Int -> Int -> Int)
   -> Map ElementSymbol Int ->  Map ElementSymbol Int  ->  Map ElementSymbol Int
-combineMaps f m1 m2 = filterZero $ unionWith f m1 m2
+combineMaps f m1 m2 = filterZero $ Map.unionWith f m1 m2
 
 -- | Smart constructor to make values of type 'MolecularFormula'.
 mkMolecularFormula :: [(ElementSymbol, Int)] -> MolecularFormula
-mkMolecularFormula = MolecularFormula . filterZero . fromList
+mkMolecularFormula = MolecularFormula . filterZero . Map.fromList
 
 -- Helper function to remove (k, v) pairs where v == 0.
 filterZero :: Map k Int -> Map k Int
-filterZero = filter (/= 0)
+filterZero = Map.filter (/= 0)
 
 instance Monoid MolecularFormula where
    mempty = emptyFormula
@@ -770,7 +756,7 @@ newtype CondensedFormula = CondensedFormula {
     getCondensedFormula :: [Either MolecularFormula (CondensedFormula, Int)] }
         deriving (Show, Read, Eq, Ord)
 
-class ToCondensedFormuala a where
+class ToElementalComposition a => ToCondensedFormula a where
   toCondensedFormula :: a -> CondensedFormula
 
 instance Monoid CondensedFormula where
@@ -804,15 +790,15 @@ newtype EmpiricalFormula = EmpiricalFormula {
     getEmpiricalFormula :: Map ElementSymbol Int }
         deriving (Show, Read, Eq, Ord)
 
--- | Type class with a single method, 'toEmpiricalFormula', which converts a
+-- | Type class with a single method; 'toEmpiricalFormula', which converts a
 -- chemical data type to `EmpiricalFormula`.
-class ToEmpiricalFormula a where
+class ToElementalComposition a => ToEmpiricalFormula a where
   toEmpiricalFormula :: a -> EmpiricalFormula
 
 -- | Smart constructor to make values of type 'EmpiricalFormula'.
 mkEmpiricalFormula :: [(ElementSymbol, Int)] -> EmpiricalFormula
 mkEmpiricalFormula l =
-  let m = filterZero (fromList l)
+  let m = filterZero (Map.fromList l)
   in EmpiricalFormula $ (`div` greatestCommonDenom m) <$> m
 
 instance ToEmpiricalFormula ElementalComposition where

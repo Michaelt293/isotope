@@ -9,7 +9,7 @@
     * [Elemental composition and molecular, condensed and empirical formulae](#elemental-composition-and-molecular-condensed-and-empirical-formulae)
     * [ElementalComposition, MolecularFormula, CondensedFormula, EmpiricalFormula quasiquoters](#elementalcomposition-molecularformula-condensedformula-empiricalformula-quasiquoters)
     * [Conversion between ElementalComposition, MolecularFormula, CondensedFormula and EmpiricalFormula data types](#conversion-between-elementalcomposition-molecularformula-condensedformula-and-empiricalformula-data-types)
-    * [Operators for working with molecular formulae](#operators-for-working-with-molecular-formulae)
+    * [Operators for working with formulae and masses](#operators-for-working-with-formulae-and-masses)
     * [ToElementalComposition type class](#elementalcomposition-type-class)
     * [Behaviour of ElementalComposition, MolecularFormula, CondensedFormula and EmpiricalFormula data types](#behaviour-of-elementalcomposition-molecularformula-condensedformula-and-empiricalformula-data-types)
     * [Additional functions accepting an ElementSymbol as input](#additional-functions-accepting-an-elementsymbol-as-input)

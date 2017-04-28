@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/Michaelt293/isotope.svg?branch=master)](https://travis-ci.org/Michaelt293/isotope)
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/Michaelt293/isotope)
+[![Gitter](https://badges.gitter.im/Michaelt293/isotope.svg)](https://gitter.im/Michaelt293/isotope)
 
 ![alt tag](https://github.com/Michaelt293/isotope/blob/master/isotope_jpeg.jpg)
 

@@ -189,6 +189,8 @@ type Nucleons          = (ProtonNumber, NeutronNumber)
 -- neutron number) for an isotope.
 type MassNumber        = Int
 
+type Charge            = Int
+
 --------------------------------------------------------------------------------
 
 -- 'Isotope' and 'Element' data types
@@ -638,13 +640,14 @@ newtype ElementalComposition = ElementalComposition  {
 -- 'monoisotopicMass', 'nominalMass' and 'averageMass'.
 class ToElementalComposition a where
      toElementalComposition :: a -> ElementalComposition
+     charge                 :: a -> Charge
      monoisotopicMass       :: a -> MonoisotopicMass
      nominalMass            :: a -> NominalMass
      averageMass            :: a -> AverageMass
      monoisotopicMass = getFormulaSum elementMonoisotopicMass
      nominalMass      = getFormulaSum elementNominalMass
      averageMass      = getFormulaSum elementAverageMass
-     {-# MINIMAL (toElementalComposition) #-}
+     {-# MINIMAL (toElementalComposition, charge) #-}
 
 -- Helper function for the calculating monoistopic masses, average mass and
 -- nominal masses for molecular formulae.
@@ -672,9 +675,11 @@ instance Operators ElementalComposition where
 
 instance ToElementalComposition ElementSymbol where
     toElementalComposition sym = mkElementalComposition [(sym, 1)]
+    charge _ = 0
 
 instance ToElementalComposition ElementalComposition where
   toElementalComposition = id
+  charge _ = 0
 
 instance Formula ElementalComposition where
    renderFormula f = foldMap renderFoldfunc
@@ -742,6 +747,7 @@ instance Operators MolecularFormula where
 
 instance ToElementalComposition MolecularFormula where
     toElementalComposition (MolecularFormula m) = ElementalComposition m
+    charge _ = 0
 
 instance Formula MolecularFormula where
    renderFormula f = foldMap renderFoldfunc
@@ -766,6 +772,7 @@ instance Monoid CondensedFormula where
 instance ToElementalComposition CondensedFormula where
     toElementalComposition =
       ElementalComposition . getMolecularFormula . toMolecularFormula
+    charge _ = 0
 
 instance ToMolecularFormula CondensedFormula where
     toMolecularFormula c = foldMap foldFunc (getCondensedFormula c)
@@ -814,6 +821,7 @@ instance ToEmpiricalFormula CondensedFormula where
 
 instance ToElementalComposition EmpiricalFormula where
   toElementalComposition (EmpiricalFormula a) = ElementalComposition a
+  charge _ = 0
 
 instance Formula EmpiricalFormula where
    renderFormula f = foldMap renderFoldfunc

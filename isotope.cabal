@@ -18,6 +18,7 @@ library
   exposed-modules:     Isotope
                      , Isotope.Base
                      , Isotope.Parsers
+                     , Isotope.Ion
   build-depends:       base >= 4.7 && < 5
                      , containers >= 0.5 && < 0.6
                      , megaparsec >= 5 && < 6

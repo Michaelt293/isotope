@@ -13,6 +13,7 @@
     * [ToElementalComposition type class](#elementalcomposition-type-class)
     * [Behaviour of ElementalComposition, MolecularFormula, CondensedFormula and EmpiricalFormula data types](#behaviour-of-elementalcomposition-molecularformula-condensedformula-and-empiricalformula-data-types)
     * [Additional functions accepting an ElementSymbol as input](#additional-functions-accepting-an-elementsymbol-as-input)
+    * [Representing ions in Isotope](#representing-ions-in-isotope)
 * [Comparison to other chemistry libraries](#comparison-to-other-chemistry-libraries)
     * [Radium](#radium)
     * [Ouch](#ouch)
@@ -156,6 +157,36 @@ Isotope also provides a range of addition functions which accepts an `ElementSym
 ```haskell
 ghci> isotopicMasses Ti
 [IsotopicMass {getIsotopicMass = 45.95262772},IsotopicMass {getIsotopicMass = 46.95175879},IsotopicMass {getIsotopicMass = 47.94794198},IsotopicMass {getIsotopicMass = 48.94786568},IsotopicMass {getIsotopicMass = 49.94478689}]
+```
+
+### Representing ions in Isotope
+
+Ions are represented in `Isotope` using the `Ion` type class. The `Ion` type class has two methods, `mz` and `polarity`; where `mz` is mass-to-charge ratio and `polarity` is either `Positive` or `Negative`. Any type with an `ToElementalComposition` instance can have an `Ion` instance if charge is not equal to zero. If charge is equal to zero, a runtime exception will occur! Ideally, the type system should be put better use to catch this error at compile-time.
+
+```haskell
+data Ammonium = Ammonium deriving Show
+
+instance ToElementalComposition Ammonium where
+  toElementalComposition _ = mkElementalComposition [(N, 1), (H, 4)]
+  charge _ = 1
+
+instance Ion Ammonium
+
+ghci> mz Ammonium
+Mz {getMz = 18.03437413335}
+```
+
+`Protonated` and `Deprotonated` types, with `Ion` instances, are provided to represent protonated and deprotonated ions, respectively.
+
+```haskell
+ghci> mz . Protonated $ mkMolecularFormula [(H, 2), (O, 1)]
+Mz {getMz = 19.01838971626}
+ghci> mz . Deprotonated $ mkMolecularFormula [(H, 2), (O, 1)]
+Mz {getMz = 17.0027396518}
+ghci> polarity . Protonated $ mkMolecularFormula [(H, 2), (O, 1)]
+Positive
+ghci> polarity . Deprotonated $ mkMolecularFormula [(H, 2), (O, 1)]
+Negative
 ```
 
 ## Comparison to other chemistry libraries

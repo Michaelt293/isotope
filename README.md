@@ -168,7 +168,7 @@ data Ammonium = Ammonium deriving Show
 
 instance ToElementalComposition Ammonium where
   toElementalComposition _ = mkElementalComposition [(N, 1), (H, 4)]
-  charge _ = 1
+  charge _ = Just 1
 
 instance Ion Ammonium
 

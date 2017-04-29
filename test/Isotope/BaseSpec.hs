@@ -115,8 +115,8 @@ spec = do
     describe "ToElementalComposition - ElementalComposition instance" $ do
       it "toElementalComposition" . property $
         \ec -> toElementalComposition ec == (ec :: ElementalComposition)
-      it "charge of an elemental composition should 0" . property $
-        \ec -> charge (ec :: ElementalComposition) == 0
+      it "charge of an elemental composition should Just 0" . property $
+        \ec -> charge (ec :: ElementalComposition) == Nothing
       it "monoisotopic mass of ethanol" $
         withinTolerance (getMonoisotopicMass (monoisotopicMass [ele|C2H6O|])) 46.04186 0.0001
         `shouldBe` True
@@ -135,8 +135,8 @@ spec = do
     describe "ToElementalComposition - ElementSymbol instance" $ do
       it "monoisotopicMass" . property $
         \sym -> monoisotopicMass sym == monoisotopicMass (mkElementalComposition [(sym, 1)])
-      it "charge of a symbol should be 0" . property $
-        \sym -> charge (sym :: ElementSymbol) == 0
+      it "charge of a symbol should be Just 0" . property $
+        \sym -> charge (sym :: ElementSymbol) == Nothing
 
     describe "Monoid instance for MolecularFormula" $ do
       it "associativity" . property $

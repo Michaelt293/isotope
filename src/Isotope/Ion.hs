@@ -12,6 +12,8 @@ calculated.
 module Isotope.Ion where
 
 import Isotope.Base
+import Data.Maybe (fromMaybe)
+import Data.Monoid
 
 -- | The polarity of a charge. A charge can be either `Positive` or `Negative`.
 data Polarity = Positive | Negative
@@ -28,10 +30,11 @@ class ToElementalComposition a => Ion a where
   mz a = Mz . abs $ monoisotopicMass' / charge'
    where
      monoisotopicMass' = getMonoisotopicMass $ monoisotopicMass a
-     charge' = if charge a /= 0
-                 then fromIntegral (charge a)
+     charge' = let charge'' = fromMaybe 0 (charge a)
+               in if charge'' /= 0
+                 then fromIntegral charge''
                  else error "An ion can't have a charge of 0!"
-  polarity = polarity' . charge
+  polarity a = polarity' $ fromMaybe 0 (charge a)
     where
       polarity' c
         | c > 0 = Positive
@@ -44,7 +47,7 @@ newtype Protonated a = Protonated a deriving (Show, Read, Eq, Ord)
 instance ToElementalComposition a => ToElementalComposition (Protonated a) where
   toElementalComposition (Protonated a) = toElementalComposition a |+|
                                           mkElementalComposition [(H, 1)]
-  charge (Protonated a) = 1 + charge a
+  charge (Protonated a) = getSum <$> Just (Sum 1) <> (Sum <$> charge a)
 
 instance ToElementalComposition a => Ion (Protonated a)
 
@@ -58,7 +61,7 @@ newtype Deprotonated a = Deprotonated a deriving (Show, Read, Eq, Ord)
 instance ToElementalComposition a => ToElementalComposition (Deprotonated a) where
   toElementalComposition (Deprotonated a) = toElementalComposition a |-|
                                             mkElementalComposition [(H, 1)]
-  charge (Deprotonated a) = -1 + charge a
+  charge (Deprotonated a) = getSum <$> Just (Sum (-1)) <> (Sum <$> charge a)
 
 instance ToElementalComposition a => Ion (Deprotonated a)
 

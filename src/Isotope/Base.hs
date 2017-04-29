@@ -640,7 +640,7 @@ newtype ElementalComposition = ElementalComposition  {
 -- 'monoisotopicMass', 'nominalMass' and 'averageMass'.
 class ToElementalComposition a where
      toElementalComposition :: a -> ElementalComposition
-     charge                 :: a -> Charge
+     charge                 :: a -> Maybe Charge
      monoisotopicMass       :: a -> MonoisotopicMass
      nominalMass            :: a -> NominalMass
      averageMass            :: a -> AverageMass
@@ -675,11 +675,11 @@ instance Operators ElementalComposition where
 
 instance ToElementalComposition ElementSymbol where
     toElementalComposition sym = mkElementalComposition [(sym, 1)]
-    charge _ = 0
+    charge _ = Nothing
 
 instance ToElementalComposition ElementalComposition where
   toElementalComposition = id
-  charge _ = 0
+  charge _ = Nothing
 
 instance Formula ElementalComposition where
    renderFormula f = foldMap renderFoldfunc
@@ -747,7 +747,7 @@ instance Operators MolecularFormula where
 
 instance ToElementalComposition MolecularFormula where
     toElementalComposition (MolecularFormula m) = ElementalComposition m
-    charge _ = 0
+    charge _ = Nothing
 
 instance Formula MolecularFormula where
    renderFormula f = foldMap renderFoldfunc
@@ -772,7 +772,7 @@ instance Monoid CondensedFormula where
 instance ToElementalComposition CondensedFormula where
     toElementalComposition =
       ElementalComposition . getMolecularFormula . toMolecularFormula
-    charge _ = 0
+    charge _ = Nothing
 
 instance ToMolecularFormula CondensedFormula where
     toMolecularFormula c = foldMap foldFunc (getCondensedFormula c)
@@ -821,7 +821,7 @@ instance ToEmpiricalFormula CondensedFormula where
 
 instance ToElementalComposition EmpiricalFormula where
   toElementalComposition (EmpiricalFormula a) = ElementalComposition a
-  charge _ = 0
+  charge _ = Nothing
 
 instance Formula EmpiricalFormula where
    renderFormula f = foldMap renderFoldfunc

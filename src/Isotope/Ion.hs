@@ -13,7 +13,9 @@ module Isotope.Ion where
 
 import Isotope.Base
 import Data.Maybe (fromMaybe)
-import Data.Monoid
+import Data.Monoid ((<>), getSum, Sum(..))
+import Data.Typeable (Typeable)
+import Control.Exception.Safe (Exception, MonadThrow, throwM)
 
 -- | The polarity of a charge. A charge can be either `Positive` or `Negative`.
 data Polarity = Positive | Negative
@@ -25,21 +27,28 @@ newtype Mz = Mz { getMz :: Double }
 
 -- | The `Ion` type class. This type class has two methods: `mz` and `polarity`.
 class ToElementalComposition a => Ion a where
-  mz :: a -> Mz
-  polarity :: a -> Polarity
-  mz a = Mz . abs $ monoisotopicMass' / charge'
+  mz :: MonadThrow m => a -> m Mz
+  polarity :: MonadThrow m => a -> m Polarity
+  mz a = fmap (\x -> Mz . abs $ monoisotopicMass' / x) charge'
    where
      monoisotopicMass' = getMonoisotopicMass $ monoisotopicMass a
      charge' = let charge'' = fromMaybe 0 (charge a)
                in if charge'' /= 0
-                 then fromIntegral charge''
-                 else error "An ion can't have a charge of 0!"
+                 then return (fromIntegral charge'')
+                 else throwM IonHasChargeZero
   polarity a = polarity' $ fromMaybe 0 (charge a)
     where
       polarity' c
-        | c > 0 = Positive
-        | c < 0 = Negative
-        | c == 0 = error "An ion can't have a charge of 0!"
+        | c > 0 = return Positive
+        | c < 0 = return Negative
+        | c == 0 = throwM IonHasChargeZero
+
+data IonHasChargeZero = IonHasChargeZero deriving (Eq, Typeable)
+
+instance Show IonHasChargeZero where
+  show _ = "Ion cannot have charge of 0"
+  
+instance Exception IonHasChargeZero
 
 -- | Protonated represents a protonated ion.
 newtype Protonated a = Protonated a deriving (Show, Read, Eq, Ord)

@@ -46,8 +46,8 @@ class ToElementalComposition a => Ion a where
 data IonHasChargeZero = IonHasChargeZero deriving (Eq, Typeable)
 
 instance Show IonHasChargeZero where
-  show _ = "Ion cannot have charge of 0"
-  
+  show _ = "Ion has charge of 0"
+
 instance Exception IonHasChargeZero
 
 -- | Protonated represents a protonated ion.

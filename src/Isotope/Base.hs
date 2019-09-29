@@ -224,7 +224,7 @@ data ElementSymbol = H  | He | Li | Be | B  | C  | N  | O  | F  | Ne | Na | Mg |
 
 -- | List containing all element symbols.
 elementSymbolList :: [ElementSymbol]
-elementSymbolList = [H .. U]
+elementSymbolList = [minBound .. maxBound]
 
 --------------------------------------------------------------------------------
 -- Functions taking an 'Element' as input
